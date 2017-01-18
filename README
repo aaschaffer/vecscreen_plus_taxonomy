@@ -1,0 +1,276 @@
+This file describes a script called from_vecscreen_to_summary.pl and
+its constitutent programs that can be used to run vecscreen and parse
+its outputs, including taxonomy information.
+
+Outline of this file:
+
+BACKGROUND
+RELEVANT FILES
+USAGE AND OPTIONS
+METHODS
+OUTPUT
+CREATING THE TAXONOMY FILE
+
+**************
+**BACKGROUND**
+**************
+vecscreen is the established NCBI program to identify matches between
+(query) sequences and (subject) vectors in UniVec. These matches may
+represent (true) vector contamination, but experience has shown that there
+can be many false positives.  A primary reason for false positives is
+that the query and the matching subject segment come from the same
+genus or closely related genera. Therefore, knowing the genus of the
+query sequence is helpful to interpret the ouput.  For what follows
+below, it is relevant that vecscreen distinguishes matches by two
+characteristics:
+
+1) Location: Internal or Terminal 
+A match is Terminal if and only if it includes a nucleotide within 25
+positions of either end of the query
+
+2) Strength: Strong, Moderate, or Weak
+A match is Strong if either: it is terminal with a raw score of at
+least 24 or it is internal with a raw score of at least 30.
+
+A match is Moderate if if either: it is terminal with a raw score in
+the interval [19,23] or internal with a raw score in the interval
+[25,29]. 
+
+A match is Weak if it is terminal with a raw score in the interval
+[16,18] or internal with a raw score in the interval [23,24].
+
+vecscreen also reports internal alignments with raw scores in the range [16,
+22] when there is also a reportable match for the same (query, vector)
+pair. The score range [16,22] is below the Weak range match for
+internal matches. In the script from_vecscreen_to_summary.pl, 
+these below-Weak Internal matches are assigned the level None.
+
+More information about vecscreen can be found at
+https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
+In this document 'vecscreen' refers to the command-line version, not the
+Web page version.
+
+******************
+**RELEVANT FILES**
+******************
+Several executable files are required for from_vecscreen_to_summary.pl
+to work. Two of these executables were developed by others and must be
+downloaded and installed separately. The full list of files is:
+
+1. from_vecscreen_to_summary.pl 
+   This is the main script that does all the work by calling 
+   the other executables listed below.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/from_vecscreen_to_summary.pl
+
+2. parse_vecscreen.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that parses
+   the vecscreen output.
+   
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/parse_vecscreen.pl
+
+3. combine_summaries.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that 
+   combines two different output formats of parse_vecscreen.pl
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/combine_summaries.pl
+
+4. add_taxonomy.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that 
+   adds taxonomy information to the output of parse_vecscreen.pl.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/add_taxonomy.pl
+
+5. assign_levels_to_taxonomy.pl
+   Independent script that is used to create a taxonomy file from the
+   NCBI taxonomy that is required input to
+   from_vecscreen_to_summary.pl.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9a/assign_levels_to_taxonomy.pl
+
+The next two files are NCBI programs that were not authored by Alejandro
+Schaffer: 
+
+6. vecscreen 
+   Identifies vector contamination in input sequences.
+
+   /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen
+
+   To add this directory to your path execute this command:
+   > ln -s /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen .
+
+   External users can download vecscreen here:
+   TODO
+
+7. srcchk 
+   Determines the taxonomy of input sequences, with respect the NCBI taxonomy tree.
+
+   /netopt/ncbi_tools64/bin/srcchk
+
+   To add this directory to your path execute this command:
+   > ln -s /netopt/ncbi_tools64/bin/srcchk .
+
+   External users can download srcchk here:
+   TODO
+
+8. epn-options.pm
+   A perl used module authored by Eric Nawrocki to handle command
+   line options.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/epn-options.pm
+
+*********************
+**USAGE AND OPTIONS**
+*********************
+Here is an example command that will run from_vecscreen_to_summary.pl
+on the fasta file myseqs.fa using the taxonomy file
+taxonomy_tree_wlevels.txt.
+
+> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa taxonomy_tree_wlevels.txt
+
+The sequence file (myseqs.fa) can be any sequence file in FASTA format.
+
+The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
+format that includes taxonomy information for vecscreen vectors. This
+can either be created by the user from the NCBI taxonomy file, or the
+user can use the provided file:
+
+/panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
+
+which was created in December 2016. If you are using this in the first
+few months of 2017, the provided file above should be fine. After
+that, you should create a new up-to-date file. Instructions for doing
+that are provided below in the section CREATING THE TAXONOMY FILE.
+
+The options that can be provided to from_vecscreen_to_summary.pl are:
+  --input_fasta <s> : REQUIRED file name <s> with sequences in fasta format 
+  --input_taxa <s>  : REQUIRED file name <s> mapping vecscreen matches to taxa
+  --output_root <s> : REQUIRED root for output files names
+  --verbose         : be verbose in output
+  --combine_output  : combine internal and terminal matches
+  --keep	    : keep temporary vecscreen output file
+
+
+The  --input_fasta <s> and --input_taxa <s> and --output_root <s>
+options are required when running from_vecscreen_to_summary.pl, while
+--verbose and --combine_output and --keep are optional.
+By default --verbose and --combine_ouput and --keep are all turned off.
+
+The --combine_output option determines whether one or two files of
+output are produced.  Currently the names of the output files are
+partly fixed at: 
+<output_root>.output_combined_wtaxonomy.txt (if --combine_output is applied) 
+<output_root>.output_internal_wtaxonomy.txt (if --combine_output is not applied) 
+<output_root>.output_terminal_wtaxonomy.txt (if --combine_output is not applied)
+
+The option --verbose determines how many columns of output are
+produced, as described in the OUTPUT section below. It does not
+cause more diagnostic output to be printed during the execution
+of the script.
+
+The option --keep determines whether the output file from
+running vecscreen within the script is kept (--keep on) or
+deleted (--keep off, default).
+
+***********
+**METHODS**
+***********
+
+Given the input taxonomy file and an input sequence file in FASTA
+format, from_vecscreen_to_summary.pl will
+do the following:
+
+1) Run vecscreen on the input FASTA-formatted sequence file to
+   identify high-scoring matches to known vector sequences in UniVec
+   in the input sequence file.
+
+2) Parse the vecscreen output into two tab-delimited files for
+   internal and terminal matches by calling parse_vecscreen.pl.
+
+3) Optionally combine the two summary files into one by calling
+   combine_summaries.pl.
+
+4) Add taxonomy information to the vescreen output by calling srcchk
+   and add_taxonomy.pl.
+
+
+**********
+**OUTPUT**
+**********
+from_vecscreen_to_summary.pl will create one line of tabular output
+per vecscreen hit in the input sequence file. There are two possible
+output formats. For both formats, columns are separated by tabs.
+
+--------------------------------
+Default output format: 5 columns
+--------------------------------
+By default (if --verbose is not used) then the format of those lines
+will be the following five columns:
+
+Column 1: Accession of query
+Column 2: Genus of query if known, or 1 otherwise
+Column 3: Matching vector, starting with uv|
+Column 4: One end of the alignment in the vector
+Column 5: The other end of the alignment in the vector
+
+This 5 column format was agreed on for internal NCBI usage in JIRA
+ticket SM-187.
+
+----------------------------------------------------------------
+Verbose output format (enabled with --verbose option: 11 columns
+----------------------------------------------------------------
+If --verbose is used, then each line of output will include the
+following 11 columns:
+
+Column 1: Accession of query
+Column 2: Genus of query if known, or 1 otherwise
+Column 3: Species of query if known, or 1 otherwise
+Column 4: Lower end of the alignment in the vector
+Column 5: Upper end of the alignment in the vector
+Column 6: Matching vector, starting with uv|
+Column 7: One end of the alignment in the vector
+Column 8: The other end of the alignment in the vector
+Column 9: The strength of this vecscreen match 
+Column 10: The strength of the strongest vecscreen match for this query
+Column 11: Whether there is any dangling part (called "Suspect" by vecscreen) at either end of the query
+
+A dangling part is an unmatched segment of <= 25 nucleotides.  
+
+This alternative 11-column format has been shown to be useful for some
+purposes, such as correcting vector-contaminated sequences in GenBank.
+
+
+******************************
+**CREATING THE TAXONOMY FILE**
+******************************
+This section describes how to create the taxonomy input file (passed
+in to from_vecscreen_to_summary.pl with the --input_taxa <s> option)
+using the NCBI taxonomy file.
+
+NCBI's taxonomy is available from directory
+ftp://ftp.ncbi.nlm.nih.gov/pub/taxonomy/.
+
+We start from any of the files: 
+taxdmp.tar.Z 
+taxdump.tar.gz 
+taxdmp.zip
+from which one can extract the file nodes.dmp.
+
+Then execute the following commands:
+
+> cut -f1,3,5 nodes.dmp > taxonomy_tree.txt
+> assign_levels_to_taxonomy.pl --input_taxa taxonomy_tree.txt --outfile taxonomy_tree_wlevels.txt
+
+taxonomy_tree.txt will have three columns:
+Column 1: taxid as an an integer
+Column 2: parent taxid as an an integer
+Column 3: rank (e.g., phylum) as a word
+
+Running assign_levels_to_taxonomy.pl will add a fourth column which is
+the level in the taxonomy tree, where the root has level 1 and each
+child taxid has a level one greter than the level of its parent taxid.
+
+*******************************************
+Send any comments or questions to Alejandro Schaffer
+(schaffer@ncbi.nlm.nih.gov)
+

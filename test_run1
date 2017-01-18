@@ -1,0 +1,4 @@
+#ln -s /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen .
+#ln -s /netopt/ncbi_tools64/bin/srcchk .
+export PERL5LIB=".:$PERL5LIB"
+./from_vecscreen_to_summary_EPNEDITED.pl --output_root test --input_fasta input_sequence_file_head.fa  --input_taxa taxonomy_tree_wlevels.txt  --verbose  --combine_output
