@@ -16,8 +16,8 @@ my $input_taxa_file;           #input file with taxonomy in a tab-delimited four
                                #(taxid, parent taxid, rank, depth where the depth of the root is 1)
 my $output_file; #output file that has the same rows and columns as input file with one or two taxonomy columns added
 my $output_filehandle; #filehandle for output_file
-    my $temp_accession_file = "temp_accession_file.txt"; #temporary file holding accessions as input for call to srcchk
-    my $accession_filehandle; #filehandle for $temp_accession_file
+my $temp_accession_file = "temp_accession_file.txt"; #temporary file holding accessions as input for call to srcchk
+my $accession_filehandle; #filehandle for $temp_accession_file
 my $nextline; #one line of input file
 my $i; #loop index
 my %accession_hash; #which accessions have we seen already
@@ -104,6 +104,9 @@ if (!defined($output_file)) {
 
 process_taxonomy_tree($input_taxa_file);
 open(INPUT, "<$input_summary_file") or die "Cannot open 1 $input_summary_file\n"; 
+if ($DEBUG) {
+    print "Opened $input_summary_file\n";
+}
 open($accession_filehandle, ">$temp_accession_file") or die "Cannot open 2 $temp_accession_file\n"; 
 open($output_filehandle, ">$output_file") or die "Cannot open 3 $output_file\n"; 
 
@@ -134,16 +137,27 @@ sub read_input {
     my $local_nextline; #one line with a single vecscreen match
     my @local_fields;   #split of $local_nextline
     my $local_accession; #one accession
+    my $local_count = 0; #count of accessions
 
+    if ($DEBUG) {
+	print "In read_input\n";
+    }
     while(defined($local_nextline = <INPUT>)) {
 	chomp($local_nextline);
         @local_fields = split /\t/, $local_nextline;
 	$local_accession = $local_fields[0];
 	#check if accession has been seen before to avoid printing it twice to srcchk input file
+	if ($DEBUG) {
+	    print "Testing accession $local_accession\n";
+	}
 	if (!defined($accession_hash{$local_accession})) {
 	    $accession_hash{$local_accession} = 1;
 	    print $local_accession_filehandle "$local_accession\n";
+	    $local_count++;
 	}
+    }
+    if ($DEBUG) {
+	print "Ended read_input with $local_count accessions\n";
     }
 }
 
@@ -287,8 +301,11 @@ sub find_ancestor {
     my $local_ancestor; #one line of taxonomy information
 
     $local_ancestor = $local_taxon;
-    while ((1 != $local_ancestor) && ((!(defined($rank_hash{$local_ancestor}))) || (!($rank_hash{$local_ancestor} eq $local_target_rank)))) {
+    while ((1 != $local_ancestor) && (defined($taxonomy_parent{$local_ancestor})) && ((!(defined($rank_hash{$local_ancestor})))  || (!($rank_hash{$local_ancestor} eq $local_target_rank)))) {
         $local_ancestor = $taxonomy_parent{$local_ancestor};
+    }
+    if ((1 != $local_ancestor) && (!defined($taxonomy_parent{$local_ancestor}))) {
+	return(1);
     }
     return($local_ancestor);
 }
