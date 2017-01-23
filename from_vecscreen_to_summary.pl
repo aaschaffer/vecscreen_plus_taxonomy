@@ -113,7 +113,7 @@ my $srcchk            = "srcchk";
 # EPN COMMENT: I've temporarily changed the name of parse_vecscreen.pl here, this should
 # reverted when the code review is complete.
 #$parse_vecscreen   = "parse_vecscreen.pl";
-my $parse_vecscreen   = "parse_vecscreen_EPNEDITED.pl";
+my $parse_vecscreen   = "parse_vecscreen.pl";
 my $combine_summaries = "combine_summaries.pl";
 my $add_taxonomy      = "add_taxonomy.pl";
 
@@ -177,7 +177,7 @@ if($combine_summaries_mode) {
 else {
   $start_secs = output_progress_prior("Adding taxonomy information to output in two stages", $progress_w, undef, *STDERR);
   run_command("$add_taxonomy --input_summary $internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
-  run_command("add_taxonomy.pl --input_summary $terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command("$add_taxonomy --input_summary $terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $internal_wtaxonomy_output_file and $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDERR);
 }
