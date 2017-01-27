@@ -8,6 +8,7 @@
 #                             --input_internal <input internal file> \   [REQUIRED]
 #                             --outfile <combined output summary file> \ [REQUIRED]
 #                             --verbose                                  [OPTIONAL]
+#                             --debug                                    [OPTIONAL]
 
 use strict;
 use warnings;
@@ -20,6 +21,8 @@ my $input_terminal_file = undef; # input fasta file
 my $input_internal_file = undef; # input fasta file 
 my $output_file         = undef; # output fasta file for sequences that do not have the forbidden terms
 my $verbose_mode;                # did user specify verbose mode, in which case match strengths are kept track of 
+                                 # and extra columns are printed
+my $debug_mode;                  # did user specify verbose mode, in which case match strengths are kept track of 
                                  # and extra columns are printed
 
 # hard-coded information on meaning of columns in the input
@@ -72,6 +75,7 @@ opt_Add("--input_internal",    "string",  undef,       1,    undef, undef,     "
 opt_Add("--outfile",           "string",  undef,       1,    undef, undef,     "output file",                  "REQUIRED: name <s> of output file to create", \%opt_HH, \@opt_order_A);
 $opt_group_desc_H{"2"} = "other options (not required)";
 opt_Add("--verbose",           "boolean", 0,           2,    undef, undef,     "be verbose",                   "be verbose in output",                        \%opt_HH, \@opt_order_A);
+opt_Add("--debug",             "boolean", 0,           2,    undef, undef,     "debugging mode on",            "turn debugging mode on",                      \%opt_HH, \@opt_order_A);
 
 # This section needs to be kept in sync (manually) with the opt_Add() section above
 my %GetOptions_H = ();
@@ -80,10 +84,11 @@ my $all_options_recognized =
                 'input_terminal=s' => \$GetOptions_H{"--input_terminal"},
                 'input_internal=s' => \$GetOptions_H{"--input_internal"},
                 'outfile=s'        => \$GetOptions_H{"--outfile"},
-                'verbose'          => \$GetOptions_H{"--verbose"});
+                'verbose'          => \$GetOptions_H{"--verbose"},
+                'debug'            => \$GetOptions_H{"--debug"});
 
-my $synopsis = "combine_summaries.pl :: combine summaries of terminal and internal vecscreen matches\n";
-my $usage    = "Usage: from_vecscreen_to_summary.pl ";
+my $synopsis = "combine_summaries.pl :: combine summaries of terminal and internal vecscreen matches\n\n";
+my $usage    = "Usage: combine_summaries.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
@@ -101,24 +106,24 @@ $input_terminal_file    = opt_Get("--input_terminal", \%opt_HH);
 $input_internal_file    = opt_Get("--input_internal", \%opt_HH);
 $output_file            = opt_Get("--outfile", \%opt_HH);
 $verbose_mode           = opt_Get("--verbose", \%opt_HH);
+$debug_mode             = opt_Get("--debug", \%opt_HH);
 
-# EPN added the block below to die if either:
+# Die if any of:
 # - non-existent option is used
 # - any of the required options are not used. 
 # - -h is used
-
-# exit if necessary (if options were messed up)
-# first, determine if all required options were actually used
 my $reqopts_errmsg = "";
 if(! defined $input_terminal_file) { $reqopts_errmsg .= "ERROR, --input_terminal not used. It is required.\n"; }
 if(! defined $input_internal_file) { $reqopts_errmsg .= "ERROR, --input_internal option not used. It is required.\n"; }
 if(! defined $output_file)         { $reqopts_errmsg .= "ERROR, --outfile option not used. It is required.\n"; }
 
-if(($reqopts_errmsg ne "") || (! $all_options_recognized) || ($GetOptions_H{"-h"})) {
-  opt_OutputHelp(*STDOUT, $usage, \%opt_HH, \@opt_order_A, \%opt_group_desc_H);
-  if   ($reqopts_errmsg ne "")     { die $reqopts_errmsg; }
-  elsif(! $all_options_recognized) { die "ERROR, unrecognized option;"; }
-  else                             { exit 0; } # -h, exit with 0 status
+if($GetOptions_H{"-h"}) {
+  opt_OutputHelp(*STDOUT, $synopsis . $usage, \%opt_HH, \@opt_order_A, \%opt_group_desc_H);
+  exit 0;
+}
+if(($reqopts_errmsg ne "") || (! $all_options_recognized)) { 
+  if   ($reqopts_errmsg ne "") { die $reqopts_errmsg; }
+  else                         { die "ERROR, unrecognized option;"; }
 }
 
 # open the input and output files
@@ -166,8 +171,10 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
   $internal_idx = 0;
 
   while (($terminal_idx < $num_terminal_lines) && ($internal_idx < $num_internal_lines)) {
-    # print "#DEBUG: terminal $terminal_idx  $terminal_accessions_A[$terminal_idx]\n";
-    # print "#DEBUG: strength is $crossfile_overall_strengths_H{$terminal_accessions_A[$terminal_idx]}\n";
+     if($debug_mode) { 
+       print "#DEBUG: terminal $terminal_idx  $terminal_accessions_A[$terminal_idx]\n";
+       print "#DEBUG: strength is $crossfile_overall_strengths_H{$terminal_accessions_A[$terminal_idx]}\n";
+     }
     if ($terminal_idx < $num_terminal_lines) {
       $terminal_accession = $terminal_accessions_A[$terminal_idx];
       if ($crossfile_overall_strengths_H{$terminal_accession} eq $current_strength) { 
@@ -176,7 +183,9 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
         if (defined($internal_accession_H{$terminal_accession})) { 
           $special_internal_idx = $internal_accession_H{$terminal_accessions_A[$terminal_idx]};
           $repeated_accession = $terminal_accession;
-          # print "#DEBUG: Repeated accession is $terminal_accession $terminal_idx  $num_terminal_lines $special_internal_idx $num_internal_lines\n";
+          if($debug_mode) { 
+            print "#DEBUG: Repeated accession is $terminal_accession $terminal_idx  $num_terminal_lines $special_internal_idx $num_internal_lines\n";
+          }
 
           # $repeated_accession exists in both internal and terminal data structures
           # output all lines from either internal or terminal for $repeated_accession in order of strength
@@ -235,9 +244,11 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
     # done with all accessions that had a terminal match, move onto remaining internal accessions
 
     while (($terminal_idx == $num_terminal_lines) && ($internal_idx < $num_internal_lines)) {
-      # print "#DEBUG: Internal $internal_idx\n";
-      # print "#DEBUG: $internal_accessions_A[$internal_idx]\n";
-      # print "#DEBUG: Internal strength is $crossfile_overall_strengths_H{$internal_accessions_A[$internal_idx]}\n";
+      if($debug_mode) { 
+        print "#DEBUG: Internal $internal_idx\n";
+        print "#DEBUG: $internal_accessions_A[$internal_idx]\n";
+        print "#DEBUG: Internal strength is $crossfile_overall_strengths_H{$internal_accessions_A[$internal_idx]}\n";
+      }
       $internal_accession = $internal_accessions_A[$internal_idx];
       if ((! ($internal_printed_A[$internal_idx])) && ($crossfile_overall_strengths_H{$internal_accession} eq $current_strength)) { 
         print OUTPUT "$internal_lines_A[$internal_idx]";

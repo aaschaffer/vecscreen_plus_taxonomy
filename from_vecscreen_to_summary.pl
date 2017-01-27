@@ -11,7 +11,7 @@
 #                                --output_root <root for naming output files> \      [REQUIRED]
 #                                --verbose \                                         [OPTIONAL]
 #                                --combine_output \                                  [OPTIONAL]
-#                                --keep
+#                                --keep                                              [OPTIONAL]
 
 use strict;
 use warnings;
@@ -20,13 +20,15 @@ use Time::HiRes qw(gettimeofday); # for timings
 
 require "epn-options.pm";
 
-my $output_root      = undef; #root for naming output files
-my $input_fasta_file = undef; #input fasta file
-my $input_taxa_file  = undef; #input file with taxonomy in a tab-delimited four-column format
-                              #(taxid, parent taxid, rank, depth where the depth of the root is 1)
-my $verbose_mode;           #did user specify verbose mode, in which case extra columns are printed
-my $verbose_string;         #string to add as argument to called programs depending on $verbose_mode 
-my $combine_summaries_mode; #should the internal and terminal matches be combined into one file
+my $output_root      = undef; # root for naming output files
+my $input_fasta_file = undef; # input fasta file
+my $input_taxa_file  = undef; # input file with taxonomy in a tab-delimited four-column format
+                              # (taxid, parent taxid, rank, depth where the depth of the root is 1)
+my $verbose_mode;             # did user specify verbose mode, in which case extra columns are printed
+my $verbose_string;           # string to add as argument to called programs depending on $verbose_mode 
+my $keep_mode;                # string to add as argument to called programs depending on $keep_mode 
+my $keep_string;              # string to add as argument to called programs depending on $verbose_mode 
+my $combine_summaries_mode;   # should the internal and terminal matches be combined into one file
 
 my %opt_HH = ();
 my @opt_order_A = ();
@@ -37,16 +39,16 @@ my %opt_group_desc_H = ();
 # This section needs to be kept in sync (manually) with the &GetOptions call below
 # The opt_Add() function is the way we add options to %opt_HH.
 # It takes values of for each of the 2nd dim keys listed above.
-#       option              type       default group requires incompat preamble-outfile                                 help-outfile
-opt_Add("-h",               "boolean", 0,         0,    undef, undef,  undef,                                           "display this help",                                      \%opt_HH, \@opt_order_A);
+#       option              type       default group requires incompat preamble-outfile                                       help-outfile
+opt_Add("-h",               "boolean", 0,         0,    undef, undef,  undef,                                                 "display this help",                                         \%opt_HH, \@opt_order_A);
 $opt_group_desc_H{"1"} = "required options";
-opt_Add("--input_fasta",    "string",  undef,     1,    undef, undef,  "input fasta file",                              "REQUIRED: file name <s> with sequences in fasta format", \%opt_HH, \@opt_order_A);
+opt_Add("--input_fasta",    "string",  undef,     1,    undef, undef,  "input fasta file",                                    "REQUIRED: file name <s> with sequences in fasta format",    \%opt_HH, \@opt_order_A);
 $opt_group_desc_H{"2"} = "other options (not required)";
-opt_Add("--input_taxa",     "string",  undef,     1,    undef, undef,  "input file mapping vecscreen matches to taxa",  "REQUIRED: file name <s> mapping vecscreen matches to taxa",        \%opt_HH, \@opt_order_A);
-opt_Add("--output_root",    "string",  undef,     1,    undef, undef,  "output files will be named starting with",      "REQUIRED: output files will be named starting with <s>", \%opt_HH, \@opt_order_A);
-opt_Add("--verbose",        "boolean", 0,         2,    undef, undef,  "output 11 columns instead of 5",                "output 11 columns instead of 5",                                   \%opt_HH, \@opt_order_A);
-opt_Add("--combine_output", "boolean", 0,         2,    undef, undef,  "combine internal and terminal matches",         "combine internal and terminal matches",                  \%opt_HH, \@opt_order_A);
-opt_Add("--keep",          "boolean", 0,         2,    undef, undef,  "keep all intermediate files (e.g. vecscreen output)", "keep all intermediate files (e.g. vecscreen output)",                  \%opt_HH, \@opt_order_A);
+opt_Add("--input_taxa",     "string",  undef,     1,    undef, undef,  "input file mapping vecscreen matches to taxa",        "REQUIRED: file name <s> mapping vecscreen matches to taxa", \%opt_HH, \@opt_order_A);
+opt_Add("--output_root",    "string",  undef,     1,    undef, undef,  "output files will be named starting with",            "REQUIRED: output files will be named starting with <s>",    \%opt_HH, \@opt_order_A);
+opt_Add("--verbose",        "boolean", 0,         2,    undef, undef,  "output 11 columns instead of 5",                      "output 11 columns instead of 5",                            \%opt_HH, \@opt_order_A);
+opt_Add("--combine_output", "boolean", 0,         2,    undef, undef,  "combine internal and terminal matches",               "combine internal and terminal matches",                     \%opt_HH, \@opt_order_A);
+opt_Add("--keep",           "boolean", 0,         2,    undef, undef,  "keep all intermediate files (e.g. vecscreen output)", "keep all intermediate files (e.g. vecscreen output)",       \%opt_HH, \@opt_order_A);
 
 # This section needs to be kept in sync (manually) with the opt_Add() section above
 my %GetOptions_H = ();
@@ -80,6 +82,7 @@ $input_fasta_file       = opt_Get("--input_fasta", \%opt_HH);
 $input_taxa_file        = opt_Get("--input_taxa", \%opt_HH);
 $verbose_mode           = opt_Get("--verbose", \%opt_HH);
 $combine_summaries_mode = opt_Get("--combine_output", \%opt_HH);
+$keep_mode              = opt_Get("--keep", \%opt_HH);
 
 # EPN added the block below to die if either:
 # - non-existent option is used
@@ -100,12 +103,8 @@ if(($reqopts_errmsg ne "") || (! $all_options_recognized) || ($GetOptions_H{"-h"
     else                             { exit 0; } # -h, exit with 0 status
 }
 
-if ($verbose_mode) {
-    $verbose_string = "--verbose";
-}
-else {
-    $verbose_string = "";
-}
+$verbose_string = ($verbose_mode) ? "--verbose" : "";
+$keep_string    = ($keep_mode)    ? "--keep"    : "";
 
 # executable commands
 my $vecscreen         = "vecscreen";
@@ -144,7 +143,7 @@ opt_OutputPreamble(*STDERR, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
 my $progress_w = 50; # the width of the left hand column in our progress output, hard-coded
 my $start_secs = output_progress_prior("Running vecscreen", $progress_w, undef, *STDERR);
 run_command("$vecscreen -query $input_fasta_file -text_output > $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
-my $desc_str = sprintf("output saved as $temp_vecscreen_output_file%s", opt_Get("--keep", \%opt_HH) ? "]" : " (temporarily)"); 
+my $desc_str = sprintf("output saved as $temp_vecscreen_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
 output_progress_complete($start_secs, $desc_str, undef, *STDERR);
 
 ##################################
@@ -170,7 +169,7 @@ if ($combine_summaries_mode) {
 ####################################
 if($combine_summaries_mode) { 
   $start_secs = output_progress_prior("Adding taxonomy information to output", $progress_w, undef, *STDERR);
-  run_command("$add_taxonomy --input_summary $combined_output_file --input_taxa $input_taxa_file $verbose_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command("$add_taxonomy --input_summary $combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDERR);
 }
@@ -185,11 +184,12 @@ else {
 ####################
 # Step 5. Clean up #
 ####################
-$start_secs = output_progress_prior("Cleaning up temporary vecscreen output file", $progress_w, undef, *STDERR);
-#TODO: Make conditional on keep
-run_command("rm -f $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
-$desc_str = "deleted $temp_vecscreen_output_file";
-output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+if(! $keep_mode) { 
+  $start_secs = output_progress_prior("Cleaning up temporary vecscreen output file", $progress_w, undef, *STDERR);
+  run_command("rm -f $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
+  $desc_str = "deleted $temp_vecscreen_output_file";
+  output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+}
 
 #############################
 # Step 6. Conclude and exit #
