@@ -151,14 +151,23 @@ $num_internal_lines = parseInputFile($internal_FH, \@internal_lines_A, \@interna
 # all lines for that accession are printed consecutively, in order of 
 # strength.
 ##########################################################################
+
+# initialize *_printed_A arrays
+for($terminal_idx = 0; $terminal_idx < $num_terminal_lines; $terminal_idx++) { 
+  $terminal_printed_A[$terminal_idx] = 0;
+}
+for($internal_idx = 0; $internal_idx < $num_internal_lines; $internal_idx++) { 
+  $internal_printed_A[$internal_idx] = 0;
+}
+
 $num_printed = 0;
 foreach $current_strength ("Strong", "Moderate", "Weak") { 
   $terminal_idx = 0;
   $internal_idx = 0;
 
   while (($terminal_idx < $num_terminal_lines) && ($internal_idx < $num_internal_lines)) {
-    print "#DEBUG: terminal $terminal_idx  $terminal_accessions_A[$terminal_idx]\n";
-    print "#DEBUG: strength is $crossfile_overall_strengths_H{$terminal_accessions_A[$terminal_idx]}\n";
+    # print "#DEBUG: terminal $terminal_idx  $terminal_accessions_A[$terminal_idx]\n";
+    # print "#DEBUG: strength is $crossfile_overall_strengths_H{$terminal_accessions_A[$terminal_idx]}\n";
     if ($terminal_idx < $num_terminal_lines) {
       $terminal_accession = $terminal_accessions_A[$terminal_idx];
       if ($crossfile_overall_strengths_H{$terminal_accession} eq $current_strength) { 
@@ -167,7 +176,7 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
         if (defined($internal_accession_H{$terminal_accession})) { 
           $special_internal_idx = $internal_accession_H{$terminal_accessions_A[$terminal_idx]};
           $repeated_accession = $terminal_accession;
-          print "#DEBUG: Repeated accession is $terminal_accession $terminal_idx  $num_terminal_lines $special_internal_idx $num_internal_lines\n";
+          # print "#DEBUG: Repeated accession is $terminal_accession $terminal_idx  $num_terminal_lines $special_internal_idx $num_internal_lines\n";
 
           # $repeated_accession exists in both internal and terminal data structures
           # output all lines from either internal or terminal for $repeated_accession in order of strength
@@ -226,9 +235,9 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
     # done with all accessions that had a terminal match, move onto remaining internal accessions
 
     while (($terminal_idx == $num_terminal_lines) && ($internal_idx < $num_internal_lines)) {
-      print "#DEBUG: Internal $internal_idx\n";
-      print "#DEBUG: $internal_accessions_A[$internal_idx]\n";
-      print "#DEBUG: Internal strength is $crossfile_overall_strengths_H{$internal_accessions_A[$internal_idx]}\n";
+      # print "#DEBUG: Internal $internal_idx\n";
+      # print "#DEBUG: $internal_accessions_A[$internal_idx]\n";
+      # print "#DEBUG: Internal strength is $crossfile_overall_strengths_H{$internal_accessions_A[$internal_idx]}\n";
       $internal_accession = $internal_accessions_A[$internal_idx];
       if ((! ($internal_printed_A[$internal_idx])) && ($crossfile_overall_strengths_H{$internal_accession} eq $current_strength)) { 
         print OUTPUT "$internal_lines_A[$internal_idx]";
