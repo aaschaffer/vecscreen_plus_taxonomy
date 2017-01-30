@@ -12,6 +12,13 @@ diff tmp.add_taxonomy.out.tmp_srcchk.txt    test-files/expected.add_taxonomy.out
 diff tmp.add_taxonomy.out                   test-files/expected.add_taxonomy.out
 echo ' done.'
 
+echo -n 'Testing from_vecscreen_to_summary.pl ...'
+perl from_vecscreen_to_summary.pl --output_root tmp --input_fasta test-files/input_sequence_file_head.fa  --input_taxa test-files/taxonomy_tree_wlevels.txt  --verbose --combine_output --keep
+diff tmp.vecscreen_output.txt test-files/expected.vecscreen_output.txt
+diff tmp.output_internal.txt  test-files/expected.vecscreen_output.txt
+diff tmp.add_taxonomy.out.tmp_srcchk.txt    test-files/expected.add_taxonomy.out.tmp_srcchk.txt
+diff tmp.add_taxonomy.out                   test-files/expected.add_taxonomy.out
+echo ' done.'
 
 
 # TODO: test verbose and non-verbose

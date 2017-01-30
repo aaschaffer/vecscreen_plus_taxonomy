@@ -102,11 +102,11 @@ opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
 opt_ValidateSet(\%opt_HH, \@opt_order_A);
 
 # define file names
-$input_terminal_file    = opt_Get("--input_terminal", \%opt_HH);
-$input_internal_file    = opt_Get("--input_internal", \%opt_HH);
-$output_file            = opt_Get("--outfile", \%opt_HH);
-$verbose_mode           = opt_Get("--verbose", \%opt_HH);
-$debug_mode             = opt_Get("--debug", \%opt_HH);
+$input_terminal_file  = opt_Get("--input_terminal", \%opt_HH);
+$input_internal_file  = opt_Get("--input_internal", \%opt_HH);
+$output_file          = opt_Get("--outfile", \%opt_HH);
+$verbose_mode         = opt_Get("--verbose", \%opt_HH);
+$debug_mode           = opt_Get("--debug", \%opt_HH);
 
 # Die if any of:
 # - non-existent option is used
@@ -126,10 +126,11 @@ if(($reqopts_errmsg ne "") || (! $all_options_recognized)) {
   else                         { die "ERROR, unrecognized option;"; }
 }
 
+
 # open the input and output files
 open($terminal_FH, "<", "$input_terminal_file") or die "Cannot open $input_terminal_file for reading\n"; 
 open($internal_FH, "<", "$input_internal_file") or die "Cannot open $input_internal_file for reading\n"; 
-open(OUTPUT,        ">", "$output_file")        or die "Cannot open $output_file for writing\n"; 
+open(OUTPUT,       ">", "$output_file")         or die "Cannot open $output_file for writing\n"; 
 
 ########################
 # Parse the input files 
