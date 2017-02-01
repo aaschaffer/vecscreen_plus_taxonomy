@@ -18,8 +18,8 @@ require "epn-options.pm";
   
 # variables related to command line options
 my $input_file;           # input file of vecscreen output
-my $output_file_internal; # output file for sequences from Genbank with only internal matches
-my $output_file_terminal; # output file for sequences from Genbank with only terminal matches
+my $output_internal_file; # output file for sequences from Genbank with only internal matches
+my $output_terminal_file; # output file for sequences from Genbank with only terminal matches
 my $verbose_mode;         # did user specify verbose mode, in which extra columns are printed
 my $debug_mode;           # did user specify debugging mode
 my $debug_query = undef;  # query accession for debugging
@@ -76,9 +76,8 @@ my $overall_adjective;           # what is the strongest adjective for which thi
 my $one_match_adjective;         # what is the adjective for a single alignment
 my $alignments_one_query;        # how many alignments have we seen for one query
 my $alignments_one_matched_pair; # how many alignments have we seen for one query-subject pair
-my $identifier_filehandle;       # filehandle for file of core identifiers
-my $terminal_filehandle;         # filehandle for terminal matches
-my $internal_filehandle;         # filehandle for terminal matches
+my $terminal_FH;                 # filehandle for terminal matches
+my $internal_FH;                 # filehandle for terminal matches
 
 # variables related to command line options, see epn-options.pm
 my %opt_HH = ();
@@ -108,7 +107,7 @@ my $all_options_recognized =
     'outfile_internal=s' => \$GetOptions_H{"--outfile_internal"},
     'outfile_terminal=s' => \$GetOptions_H{"--outfile_terminal"},
     'verbose'            => \$GetOptions_H{"--verbose"},
-    'keep'               => \$GetOptions_H{"--keep"});
+    'debug'              => \$GetOptions_H{"--debug"});
 
 
 my $synopsis = "parse_vecscreen.pl :: convert vecscreen output file to one or more tab-delimited output files\n";
@@ -127,8 +126,8 @@ opt_ValidateSet(\%opt_HH, \@opt_order_A);
 
 # define file names
 $input_file           = opt_Get("--input",           \%opt_HH);
-$output_internal_file = opt_Get("--output_internal", \%opt_HH);
-$output_terminal_file = opt_Get("--output_terminal", \%opt_HH);
+$output_internal_file = opt_Get("--outfile_internal", \%opt_HH);
+$output_terminal_file = opt_Get("--outfile_terminal", \%opt_HH);
 $verbose_mode         = opt_Get("--verbose",         \%opt_HH);
 $debug_mode           = opt_IsUsed("--debug",        \%opt_HH);
 if($debug_mode) { 
@@ -152,105 +151,149 @@ if(($GetOptions_H{"-h"}) || ($reqopts_errmsg ne "") || (! $all_options_recognize
 
 # open the input and output files
 open(INPUT,        "<", $input_file)           or die "Cannot open $input_file for reading\n"; 
-open($internal_FH, ">", $output_file_internal) or die "Cannot open $output_file_internal for writing\n"; 
-open($terminal_FH, ">", $output_file_terminal) or die "Cannot open $output_file_terminal for writing\n"; 
+open($internal_FH, ">", $output_internal_file) or die "Cannot open $output_internal_file for writing\n"; 
+open($terminal_FH, ">", $output_terminal_file) or die "Cannot open $output_terminal_file for writing\n"; 
 
 # Parse input file (the vecscreen output):
 #
 # The following line types need to be recognized and distinguished:
+# - these types were named based on order they appear in the file, A is first, B second etc.
+# - there is not exactly 1 line of each type per each query, some have 0, others > 1, and
+#   many line type counts are query-dependent. 
+#
 #   A. BLASTN lines:            lines that begin with "BLASTN", indicating the start of output for a new query 
 #                               isBLASTNLine() returns '1' 
-#   B. Length lines:            lines that begin with "Length", including the length of the query or subject (vector)
-#                               getLength() returns length (!0)
-#   C. Query name lines:        lines that begin with "Query=", including the name of a query
-#                               isQueryNameLine() returns '1'
-#   D. Subject name lines:      lines that begin with "> gnl"   including the name of a subject (vector)
-#                               isSubjectNameLine() returns '1'
-#   E. Query alignment lines:   lines that begin with "Query "  including a segment of the query in an alignment
-#                               isQueryAlignmentLine() returns '1'
-#   F. Subject alignment lines: lines that begin with "Sbjct "  including a segment of the subject (vector) in an alignment
-#                               isSubjectAlignmentLine() returns '1'
-#   G. Match lines:             lines that begin with "Strong", "Moderate", "Weak" or "Suspect" indicating a type of match
+#                               1 per query
+#   B. Match lines:             lines that begin with "Strong", "Moderate", "Weak" or "Suspect" indicating a type of match
 #                               getMatch() returns name of match (!0)
-#   H. Score lines:             lines that contain "Score" including score for a match
-#                               getScore() returns score (!0)
-#   I. Position lines:          lines that determine whether a query has a terminal match or has an internal match
+#                               >= 0 per query
+#   C. Position lines:          lines that determine whether a query has a terminal match or has an internal match
 #                               isPositionLine() returns '1'
 #                               getPositions() returns $start and $stop
-#line # line # relevant
-# num # type # subroutine             # $state                 # <INPUT> line 
-#-----#-------------------------------#------------------------#-----------------------------------------------------------------------
-#   1 #    1 # isBLASTN               # ?                      #BLASTN 2.6.0+
-#   2 #                               # $State_FoundBLASTN     #
-#   3 #                               # "                      #
-#   4 #                               # "                      # Reference: Stephen F. Altschul, Thomas L. Madden, Alejandro A.
-#   5 #                               # "                      # Schaffer, Jinghui Zhang, Zheng Zhang, Webb Miller, and David J.
-#   6 #                               # "                      # Lipman (1997), "Gapped BLAST and PSI-BLAST: a new generation of
-#   7 #                               # "                      # protein database search programs", Nucleic Acids Res. 25:3389-3402.
-#   8 #                               # "                      #
-#   9 #                               # "                      #
-#  10 #                               # "                      #
-#  11 #                               # "                      #Database: UniVec (build 9.0)
-#  12 #                               # "                      #           5,456 sequences; 1,049,913 total letters
-#  13 #                               # "                      #
-#  14 # getMatch() => !0 ("Moderate") # "                      #Moderate match
-#  15 # isPositionLine() =>1          # $State_FoundMatch      #1285	1333
-#  16 # isPositionLine() =>1          # $State_FoundAtLeastOne #1408	1436
-#  17 # getMatch() => !0 ("Suspect")  # "                      #Suspect origin
-#  18 # isPositionLine() =>1          # "                      #1437	1467
-#  19 #                               # "                      #
-#  20 #                               # "                      #
-#  21 # Type (3) isQueryNameLine()=>1 # "                      #Query= XM_715279.1 Candida albicans SC5314 Spl1p (SPL1), partial mRNA
-#  22 #                               # $State_FoundQuery      #
-#  23 # Line type (2)                 # "                      #Length=1467
-#  24 #                               # "                      #
-#  25 #                               # "                      #
-#  26 # Type ? IsSubjectNameLine()=>1 # "                      #> gnl|uv|U29899.1:1847-4463 Cloning vector pACT2 MatchmakerII
-#  27 # ignored b/c $seenVectorName=1 # "                      #Length=2617
-#  28 #                               # "                      #
-#  29 # getScore()=>!0             # "                      # Score = 58.6 bits (29),  Expect = 4e-06
-#  30 #                               # "                      # Identities = 29/29 (100%), Gaps = 0/29 (0%)
-#  31 #                               # "                      # Strand=Plus/Minus
-#  32 #                               # "                      #
-#  33 # isQueryAlignmentLine()=>1     # "                      # Query  1408  TTATGGGAAATGGTTCAAGAAGGTATTGA  1436
-#  34 #                               # "                      #              |||||||||||||||||||||||||||||
-#  35 # isSubjectAlignmentLine()=>1   # "                      # Sbjct  2140  TTATGGGAAATGGTTCAAGAAGGTATTGA  2112
-#  36 #                               # "                      #
-#  37 #                               # "                      #
-#  38 # IsSubjectNameLine()=>1        # "                      #> gnl|uv|U03498.1:7366-8059 Yeast episomal vector YEp13
-#  39 #                               #                        #Length=694
-#  40 #                               #                        #
-#  41 # getScore()=>!0             #                        # Score = 50.6 bits (25),  Expect = 0.001
-#  42 #                               #                        # Identities = 45/49 (92%), Gaps = 0/49 (0%)
-#  43 #                               #                        # Strand=Plus/Minus
-#  44 #                               #                        # 
-#  45 #                               #                        #Query  1285  GATGATGCCTTAGCTCATTCTTCAATTAGATTTGGTATTGGTAGATTTA  1333
-#  46 #                               #                        #             |||||||| ||||| |||||||| || ||||||||||||||||||||||
-#  47 #                               #                        #Sbjct  113   GATGATGCATTAGCCCATTCTTCCATCAGATTTGGTATTGGTAGATTTA  65
-#  48 #                               #                        #
-#  49 #                               #                        #
-#  50 #                               #                        #
-#  51 #                               #                        #  Lambda      K        H
-#  52 #                               #                        #    1.39    0.747     1.38 
-#  53 #                               #                        # 
-#  54 #                               #                        # Gapped
-#  55 #                               #                        # Lambda      K        H
-#  56 #                               #                        #   1.39    0.747     1.38 
-#  57 #                               #                        #
-#  58 #                               #                        # Effective search space used: 1750000000000
-#  59 #                               #                        #
-#  60 #                               #                        #
-#  61 #                               #                        # Database: UniVec (build 9.0)
-#  62 #                               #                        #  Posted date:  Mar 23, 2015  3:44 PM
-#  63 #                               #                        #  Number of letters in database: 1,049,913
-#  64 #                               #                        #  Number of sequences in database:  5,456
-#  66 #                               #                        #
-#  67 #                               #                        #
-#  68 #                               #                        #
-#  69 #                               #                        # Matrix: blastn matrix 1 -5
-#  70 #                               #                        # Gap Penalties: Existence: 3, Extension: 3
+#                               >= 0 per query
+#   D. Query name lines:        lines that begin with "Query=", including the name of a query
+#                               isQueryNameLine() returns '1'
+#                               1 per query
+#   E. Length lines:            lines that begin with "Length", including the length of the query or subject (vector)
+#                               getLength() returns length (!0)
+#                               These lines are *only* relevant when they pertain to the query
+#                               which is only true when $seenVectorName is 0
+#                               >=1 per query, only one of which is relevant (length of query)
+#   F. Subject name lines:      lines that begin with "> gnl"   including the name of a subject (vector)
+#                               isSubjectNameLine() returns '1'
+#                               >= 0 per query
+#   G. Score lines:             lines that contain "Score" including score for a match
+#                               getScore() returns score (!0)
+#                               >= 0 per query
+#   H. Query alignment lines:   lines that begin with "Query "  including a segment of the query in an alignment
+#                               isQueryAlnmentLine() returns '1'
+#                               >= 0 per query
+#   I. Subject alignment lines: lines that begin with "Sbjct "  including a segment of the subject (vector) in an alignment
+#                               isSubjectAlnmentLine() returns '1'
+#                               >= 0 per query
+#
+#
+# Below is a table with 5 columns that shows an example input file
+# (column 5) and what type each line is (column 2). Note that some
+# lines have no type (are ignored). Column 3 shows the subroutine that
+# is most relevant to recognizing each line type.  The value of the
+# $state variable is shown as what it will be after each line in
+# column 4.  The file line numbers (column 1) are sometimes referred
+# to in the comments within the code of the large while() loop below
+# that loops over lines of the input file.#
+#
+#----------------------------------------------------------------------------------------------------------------------------------------
+#file |      |                        |                          |
+#line | line | relevant               | value of                 | example file input line 
+# num | type | subroutine             | $state after each line   | value of $nextline, read from <INPUT> at top of loop
+#-----|-------------------------------|--------------------------|-----------------------------------------------------------------------
+#   1 |    A | isBLASTN               | ->$State_FoundBLASTN     |BLASTN 2.6.0+
+#   2 |      |                        | "                        |
+#   3 |      |                        | "                        |
+#   4 |      |                        | "                        | Reference: Stephen F. Altschul, Thomas L. Madden, Alejandro A.
+#   5 |      |                        | "                        | Schaffer, Jinghui Zhang, Zheng Zhang, Webb Miller, and David J.
+#   6 |      |                        | "                        | Lipman (1997), "Gapped BLAST and PSI-BLAST: a new generation of
+#   7 |      |                        | "                        | protein database search programs", Nucleic Acids Res. 25:3389-3402.
+#   8 |      |                        | "                        |
+#   9 |      |                        | "                        |
+#  10 |      |                        | "                        |
+#  11 |      |                        | "                        |Database: UniVec (build 9.0)
+#  12 |      |                        | "                        |           5,456 sequences; 1,049,913 total letters
+#  13 |      |                        | "                        |
+#  14 |    B | getMatch()             | "                        |Moderate match
+#  15 |    C | isPositionLine()       | ->$State_FoundMatch      |1285	1333
+#  16 |    C | isPositionLine()       | ->$State_FoundAtLeastOne |1408	1436
+#  17 |    B | getMatch()             | "                        |Suspect origin
+#  18 |    C | isPositionLine()       | "                        |1437	1467
+#  19 |      |                        | "                        |
+#  20 |      |                        | "                        |
+#  21 |    D | isQueryNameLine()      | "                        |Query= XM_715279.1 Candida albicans SC5314 Spl1p (SPL1), partial mRNA
+#  22 |      |                        | ->$State_FoundQuery      |
+#  23 |    E | getLength()            | "                        |Length=1467
+#  24 |      |                        | "                        |
+#  25 |      |                        | "                        |
+#  26 |    F | IsSubjectNameLine()    | "                        |> gnl|uv|U29899.1:1847-4463 Cloning vector pACT2 MatchmakerII
+#  27 | ignored b/c $seenVectorName=1 | "                        |Length=2617
+#  28 |      |                        | "                        |
+#  29 |    G | getScore()             | "                        | Score = 58.6 bits (29),  Expect = 4e-06
+#  30 |      |                        | "                        | Identities = 29/29 (100%), Gaps = 0/29 (0%)
+#  31 |      |                        | "                        | Strand=Plus/Minus
+#  32 |      |                        | "                        |
+#  33 |    H | isQueryAlnmentLine()   | "                        | Query  1408  TTATGGGAAATGGTTCAAGAAGGTATTGA  1436
+#  34 |      |                        | "                        |              |||||||||||||||||||||||||||||
+#  35 |    I | isSubjectAlnmentLine() | "                        | Sbjct  2140  TTATGGGAAATGGTTCAAGAAGGTATTGA  2112
+#  36 |      |                        | "                        |
+#  37 |      |                        | "                        |
+#  38 |    I | IsSubjectNameLine()    | "                        |> gnl|uv|U03498.1:7366-8059 Yeast episomal vector YEp13
+#  39 | ignored b/c $seenVectorName=1 | "                        |Length=694
+#  40 |      |                        | "                        |
+#  41 |    G | getScore()             | "                        | Score = 50.6 bits (25),  Expect = 0.001
+#  42 |      |                        | "                        | Identities = 45/49 (92%), Gaps = 0/49 (0%)
+#  43 |      |                        | "                        | Strand=Plus/Minus
+#  44 |      |                        | "                        | 
+#  45 |    H | IsQueryAlnmentLine()   | "                        |Query  1285  GATGATGCCTTAGCTCATTCTTCAATTAGATTTGGTATTGGTAGATTTA  1333
+#  46 |      |                        | "                        |             |||||||| ||||| |||||||| || ||||||||||||||||||||||
+#  47 |    I | IsSubjectAlnmentLine() | "                        |Sbjct  113   GATGATGCATTAGCCCATTCTTCCATCAGATTTGGTATTGGTAGATTTA  65
+#  48 |      |                        | "                        |
+#  49 |      |                        | "                        |
+#  50 |      |                        | "                        |
+#  51 |      |                        | "                        |  Lambda      K        H
+#  52 |      |                        | "                        |    1.39    0.747     1.38 
+#  53 |      |                        | "                        | 
+#  54 |      |                        | "                        | Gapped
+#  55 |      |                        | "                        | Lambda      K        H
+#  56 |      |                        | "                        |   1.39    0.747     1.38 
+#  57 |      |                        | "                        |
+#  58 |      |                        | "                        | Effective search space used: 1750000000000
+#  59 |      |                        | "                        |
+#  60 |      |                        | "                        |
+#  61 |      |                        | "                        | Database: UniVec (build 9.0)
+#  62 |      |                        | "                        |  Posted date:  Mar 23, 2015  3:44 PM
+#  63 |      |                        | "                        |  Number of letters in database: 1,049,913
+#  64 |      |                        | "                        |  Number of sequences in database:  5,456
+#  66 |      |                        | "                        |
+#  67 |      |                        | "                        |
+#  68 |      |                        | "                        |
+#  69 |      |                        | "                        | Matrix: blastn matrix 1 -5
+#  70 |      |                        | "                        | Gap Penalties: Existence: 3, Extension: 3
 ############################################################################################
-
+#
+# Output: 
+# Each query/target match is transformed into a single line of tabular output
+# and output when that match is finished being processed from the input.
+# There are 3 different situations in which the tabular line describing a 
+# match is output:
+# output situation 1: output the final query/subject match for a query. 
+#                     Occurs only when (i) we see the 'next' BLASTN line (line type A)
+#                     or (ii) we run out of input lines because only then do we 
+#                     know we are finished with a query.
+# output situation 2: output a query/subject match n for a query/subject pair with 
+#                     X matches, where n < X. Occurs when we see the next 'Score' line
+#                     (line type G) indicating a new query/subject pair (for same
+#                     query but different subject than and we've previously seen a query/subject pair
+#                     for 
+# HERE HERE HERE finish comments once you are confident you understand what's going on
+#
 # Initializations
 $state       = $State_Naive;
 $num_queries = 0;
@@ -271,7 +314,7 @@ while(defined($nextline = <INPUT>)) {
   ######################################################################################
 
   ######################################################################################
-  if (isQueryAlignmentLine($nextline)) {
+  if (isQueryAlnmentLine($nextline)) {
     # E. Query alignment line:line that begins with "Query "including a segment of the query in an alignment
     ($query_start, $query_end) = getQueryAlignmentPositions($nextline); 
     if ($processing_alignment) { 
@@ -290,7 +333,7 @@ while(defined($nextline = <INPUT>)) {
   ######################################################################################
 
   ######################################################################################
-  if (isSubjectAlignmentLine($nextline)) {
+  if (isSubjectAlnmentLine($nextline)) {
     # F. Subject alignment line: line that begins with "Sbjct "  including a segment of the subject (vector) in an alignment
     ($subject_start, $subject_end) = getSubjectAlignmentPositions($nextline); 
     if ($processing_alignment) {
@@ -316,7 +359,7 @@ while(defined($nextline = <INPUT>)) {
     # A. BLASTN line: line that begins with "BLASTN", indicating the start of output 
     #                 for a new query 
     # reset some state variables accordingly
-    $seenVector  = 0;	
+    $seenVectorName  = 0;	
     $processing_alignment = 0;
     $state = $State_FoundBLASTN;
 
@@ -335,7 +378,7 @@ while(defined($nextline = <INPUT>)) {
       selectivePrinting(1);
     }
     $needToPrintMatch = 0; # reset flag that we need to print a match
-    if ($debug_mode && defined($query) && ($query =~m/$query_debug/)) {
+    if ($debug_mode && defined($query) && ($query =~m/$debug_query/)) {
       print "set needToPrintMatch to $needToPrintMatch\n";
     }
     # reset variables for next hit
@@ -356,7 +399,7 @@ while(defined($nextline = <INPUT>)) {
       # *** line num 15 in above example file *** 
       ($startPos, $endPos) = getPositions($nextline);
       $state = $State_FoundAtLeastOne;
-      if ($debug_mode && defined($query) && ($query =~m/$query_debug/)) {
+      if ($debug_mode && defined($query) && ($query =~m/$debug_query/)) {
         print "setting needToPrintMatch to 1 at location A; triggering line is $nextline\n"; 
       }
       $needToPrintMatch = 1; # we have a match, so we need to print it eventually
@@ -376,7 +419,7 @@ while(defined($nextline = <INPUT>)) {
       if ($matchType = getMatch($nextline)) {
         ($has_strong_match, $has_moderate_match, $has_weak_match) = updateMatchAdjectives($has_strong_match, $has_moderate_match, $has_weak_match, $matchType);
         $state = $State_FoundAtLeastOne;
-        if ($debug_mode && defined($query) && ($query =~m/$query_debug/)) {
+        if ($debug_mode && defined($query) && ($query =~m/$debug_query/)) {
           print "setting needToPrintMatch to 1 at location B; triggering line is $nextline\n"; 
         }
         $needToPrintMatch = 1;
@@ -465,8 +508,8 @@ if ($needToPrintMatch) {
 # print "Processed $num_queries queries\n";
 
 close(INPUT);
-close($internal_filehandle);
-close($terminal_filehandle);
+close($internal_FH);
+close($terminal_FH);
 
 # Subroutine: isBLASTNLine() 
 # Synopsis: Determines whether a line starts with the string BLASTN or not  
@@ -558,7 +601,7 @@ sub getQuery {
     return $local_query_id;
 }
 
-# Subroutine: isSubjectAlignmentLine() 
+# Subroutine: isSubjectAlnmentLine() 
 # Synopsis: Determines whether a line starts with the string Sbjct or not  
 #
 # Args: $local_one_line: the line of data       
@@ -566,8 +609,8 @@ sub getQuery {
 #             
 #
 # Returns: 1 if yes, 0 if no
-sub isSubjectAlignmentLine {
-    my $sub_name = "isSubjectAlignmentLine()";
+sub isSubjectAlnmentLine {
+    my $sub_name = "isSubjectAlnmentLine()";
     my $nargs_exp = 1;
     if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
  
@@ -581,7 +624,7 @@ sub isSubjectAlignmentLine {
     }
 }
 
-# Subroutine: isQueryAlignmentLine() 
+# Subroutine: isQueryAlnmentLine() 
 # Synopsis: Determines whether a line starts with the string Query or not  
 #
 # Args: $local_one_line: the line of data       
@@ -589,8 +632,8 @@ sub isSubjectAlignmentLine {
 #             
 #
 # Returns: 1 if yes, 0 if no
-sub isQueryAlignmentLine {
-    my $sub_name = "isQueryAlignmentLine()";
+sub isQueryAlnmentLine {
+    my $sub_name = "isQueryAlnmentLine()";
     my $nargs_exp = 1;
     if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
  
@@ -934,15 +977,16 @@ sub selectivePrinting {
     if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
     my ($local_calling_location) = @_;
-    if ($debug_mode && $query =~m/$query_debug/) {
+    if ($debug_mode && $query =~m/$debug_query/) {
 	print "printing query $query at location $local_calling_location; internal match is $internalMatch $overall_query_start $overall_query_end\n";
 	print "needToPrintMatch is $needToPrintMatch; triggering line is: $nextline\n";
     }
+    print("location $local_calling_location query: $query\n");
     if ($internalMatch) {
-	printOutputLine($internal_filehandle);
+	printOutputLine($internal_FH);
     }
     else {
-	printOutputLine($terminal_filehandle);
+	printOutputLine($terminal_FH);
     }
 }
 
