@@ -1,5 +1,5 @@
 This file describes a script called from_vecscreen_to_summary.pl and
-its constitutent programs that can be used to run vecscreen and parse
+its constituent programs that can be used to run vecscreen and parse
 its outputs, including taxonomy information.
 
 Outline of this file:
@@ -20,7 +20,7 @@ represent (true) vector contamination, but experience has shown that there
 can be many false positives.  A primary reason for false positives is
 that the query and the matching subject segment come from the same
 genus or closely related genera. Therefore, knowing the genus of the
-query sequence is helpful to interpret the ouput.  For what follows
+query sequence is helpful to interpret the output.  For what follows
 below, it is relevant that vecscreen distinguishes matches by two
 characteristics:
 
@@ -154,7 +154,7 @@ The options that can be provided to from_vecscreen_to_summary.pl are:
 The  --input_fasta <s> and --input_taxa <s> and --output_root <s>
 options are required when running from_vecscreen_to_summary.pl, while
 --verbose and --combine_output and --keep are optional.
-By default --verbose and --combine_ouput and --keep are all turned off.
+By default --verbose and --combine_output and --keep are all turned off.
 
 The --combine_output option determines whether one or two files of
 output are produced.  Currently the names of the output files are
@@ -190,7 +190,7 @@ do the following:
 3) Optionally combine the two summary files into one by calling
    combine_summaries.pl.
 
-4) Add taxonomy information to the vescreen output by calling srcchk
+4) Add taxonomy information to the vecscreen output by calling srcchk
    and add_taxonomy.pl.
 
 
@@ -268,7 +268,7 @@ Column 3: rank (e.g., phylum) as a word
 
 Running assign_levels_to_taxonomy.pl will add a fourth column which is
 the level in the taxonomy tree, where the root has level 1 and each
-child taxid has a level one greter than the level of its parent taxid.
+child taxid has a level one greater than the level of its parent taxid.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
