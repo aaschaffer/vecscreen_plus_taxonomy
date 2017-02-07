@@ -26,7 +26,7 @@ characteristics:
 
 1) Location: Internal or Terminal 
 A match is Terminal if and only if it includes a nucleotide within 25
-positions of either end of the query
+positions of either end of the query; otherwise, the match is Internal.
 
 2) Strength: Strong, Moderate, or Weak
 A match is Strong if either: it is terminal with a raw score of at
@@ -47,7 +47,7 @@ these below-Weak Internal matches are assigned the level None.
 
 More information about vecscreen can be found at
 https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
-In this document 'vecscreen' refers to the command-line version, not the
+In this document, 'vecscreen' refers to the command-line version, not the
 Web page version.
 
 ******************
@@ -55,10 +55,10 @@ Web page version.
 ******************
 Several executable files are required for from_vecscreen_to_summary.pl
 to work. Two of these executables were developed by others and must be
-downloaded and installed separately. The full list of files is:
+downloaded and installed separately outside of NCBI. The full list of files is:
 
 1. from_vecscreen_to_summary.pl 
-   This is the main script that does all the work by calling 
+   This is the main script that coordinates the work by calling 
    the other executables listed below.
 
    /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/from_vecscreen_to_summary.pl
@@ -83,8 +83,8 @@ downloaded and installed separately. The full list of files is:
 
 5. assign_levels_to_taxonomy.pl
    Independent script that is used to create a taxonomy file from the
-   NCBI taxonomy that is required input to
-   from_vecscreen_to_summary.pl.
+   NCBI taxonomy. The file produced by assign_levels_to_taxonomy.pl
+   is required input to from_vecscreen_to_summary.pl.
 
    /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9a/assign_levels_to_taxonomy.pl
 
@@ -94,6 +94,7 @@ Schaffer:
 6. vecscreen 
    Identifies vector contamination in input sequences.
 
+   Within NCBI, vecscreen can be found at
    /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen
 
    To add this directory to your path execute this command:
@@ -105,6 +106,7 @@ Schaffer:
 7. srcchk 
    Determines the taxonomy of input sequences, with respect the NCBI taxonomy tree.
 
+   Within NCBI, srcchk can be found at
    /netopt/ncbi_tools64/bin/srcchk
 
    To add this directory to your path execute this command:
@@ -114,7 +116,7 @@ Schaffer:
    TODO
 
 8. epn-options.pm
-   A perl used module authored by Eric Nawrocki to handle command
+   A perl module authored by Eric Nawrocki to handle command
    line options.
 
    /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/epn-options.pm
@@ -128,10 +130,10 @@ taxonomy_tree_wlevels.txt.
 
 > from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa taxonomy_tree_wlevels.txt
 
-The sequence file (myseqs.fa) can be any sequence file in FASTA format.
+The sequence file (myseqs.fa) can be any nucleotide sequence file in FASTA format.
 
 The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
-format that includes taxonomy information for vecscreen vectors. This
+format that includes taxonomy information based on NCBI's taxonomy. This
 can either be created by the user from the NCBI taxonomy file, or the
 user can use the provided file:
 
