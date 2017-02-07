@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # the first line of perl code has to be above
 #
-# Author: Alejandro Schaffer
+# Author: Alejandro Schaffer and Eric Nawrocki
 # Code to add taxonomy information to parsed vecscreen output for 
 # vector screening
 # Usage: add_taxonomy.pl --input_summary <input file> \ [REQUIRED]
@@ -404,6 +404,7 @@ sub find_ancestor {
 
     $local_ancestor = $local_taxon;
     while ((1 != $local_ancestor) && (defined($taxonomy_parent_H{$local_ancestor})) && ((!(defined($taxonomy_rank_H{$local_ancestor})))  || (!($taxonomy_rank_H{$local_ancestor} eq $local_target_rank)))) {
+
         $local_ancestor = $taxonomy_parent_H{$local_ancestor};
     }
     if ((1 != $local_ancestor) && (!defined($taxonomy_parent_H{$local_ancestor}))) {
