@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # the first line of perl code has to be above
 #
-# Author: Alejandro Schaffer with help from Eric Nawrocki
+# Author: Alejandro Schaffer and Eric Nawrocki
 # Code to parse vecscreen output for vector screening.
 #
 # Usage: parse_vecscreen.pl --input <input file>                 \ [REQUIRED]
@@ -61,6 +61,10 @@ my $linetype;              # type of current line
 my $next_score;            # score of the next match
 my $line;                  # one line of input file
 my $match_adjective;       # Strong, Moderate, Weak, or Suspect
+                           # Every reported  match has at least one alignment that qualifies as
+                           # Strong, Moderate, Weak
+                           # There can be secodary alignment below the score threshold for Weak.
+                           # unaligned ends of < 25 nucleotides are reported as Suspect. 
 my $query_name;            # the identifier for the query
 my $vector_name;           # string identifying a vector that matches a query
 my $final_score;           # score of the current match
@@ -69,7 +73,7 @@ my $print_flag;            # '0' or '1' valued variable that determines whether 
 my $startPos;              # starting position of a match to vector
 my $endPos;                # ending position of a match to vector
 my $query_length;          # length of current query
-my $seen_vector_name;      # have we seen the vector identifier for this match or not
+my $seen_vector_name;      # have we seen the vector identifier for this match or not?
 my $vector_start;          # first aligned position in one block of the vector (subject) sequence
 my $vector_end;            # last aligned position in one block of the vector (subject) sequence
 my $query_start;           # first aligned position in one block of the query sequence
@@ -79,11 +83,11 @@ my $overall_vector_start;  # vector start for an alignment that can have multipl
 my $overall_vector_end;    # vector end for an alignment that can have multiple blocks
 my $overall_query_start;   # query start for an alignment that can have multiple blocks
 my $overall_query_end;     # query end for an alignment that can have multiple blocks
-my $has_strong_match;      # does the query have a strong match
-my $has_moderate_match;    # does the query have a moderate match
-my $has_weak_match;        # does the query have a weak match
+my $has_strong_match;      # does the query have a strong match?
+my $has_moderate_match;    # does the query have a moderate match?
+my $has_weak_match;        # does the query have a weak match?
 my $output_line;           # a line of output
-my $internal_match;        # is this match an internal match
+my $internal_match;        # is this match an internal match?
 
 my $alignments_one_query;        # how many alignments have we seen for one query
 my $alignments_one_matched_pair; # how many alignments have we seen for one query-vector pair
@@ -194,6 +198,9 @@ open($terminal_FH, ">", $output_terminal_file) or die "Cannot open $output_termi
 #                               These lines are *only* relevant when they pertain to the query
 #                               which is only true when $seen_vector_name is 0
 #                               >=1 per query, only one of which is relevant (length of query)
+#                               The length line is pertinent because for matches near the right end
+#                               of the query one determines whether they are terminal (or internal) by comparing
+#                               the rightmost aligned position in the query to its length.  
 #
 #   F. Vector name lines:       lines that begin with "> gnl"   including the name of a vector (subject)
 #                               isVectorNameLine() returns '1'
@@ -314,7 +321,7 @@ open($terminal_FH, ">", $output_terminal_file) or die "Cannot open $output_termi
 ############################################################################################
 #
 # Output: 
-# Each query/target match is transformed into a single line of tabular output
+# Each query/vector alignment is transformed into a single line of tabular output
 # and output when that match is finished being processed from the input.
 # There are 3 different situations in which we output a single tabular 
 # line describing the most recent parsed match:
@@ -326,7 +333,7 @@ open($terminal_FH, ">", $output_terminal_file) or die "Cannot open $output_termi
 #
 # output situation 2: output a query/vector match n for a query/vector pair with 
 #                     X (X>1) matches, where n < X. Occurs when we see the next 'Score' line
-#                     (line type G) indicating a new match for the current query/vector 
+#                     (line type G) indicating a new alignment for the current query/vector 
 #                     pair is coming up, so we output the previous one.
 #
 # output situation 3: output a query/vector match n for a query/vector pair with 
@@ -335,8 +342,34 @@ open($terminal_FH, ">", $output_terminal_file) or die "Cannot open $output_termi
 #                     would be covered by situation 1). Occurs when we see the next VectorName
 #                     line (line type G) indicating a new vector with at least one match to 
 #                     the current query.
-#
-#
+
+# Every query/vector  match has at least one (highest scoring, primary) alignment that qualifies as
+# Strong, Moderate, or Weak.
+# Every alignment in the input should correspond in one-to-one fashion with a row of output,
+# but the output is partitioned into two files, one for internal alignments and one for terminal 
+# alignments.
+# There can be secondary alignments below the score threshold for Weak; to those low-scoring
+# secondary alignments, this program assigns the adjective 'None' in the output. 
+# If  a stretch of < 25 nucleotides at either end of the query is both unaligned and next to
+# an aligned region, then that interval is reported as Suspect in the vecscreen output, but
+# the vecscreen output (input to this program) does not show the correspondence between
+# Suspect ends and alignments. For each alignment described in the output
+# of this program, the information about any Suspect ends is printed in one column of the output;
+# multiple Suspect ends reported by vecscreen are concatenated in one string by this program;
+# if no suspect end is present, that column shows the value 'None'. 
+# For example, if a query alignment to a vector starts at position 13 of the query, then
+# the interval [1,12] of the query would be Suspect.
+# Importantly, there is not a perfect correspondence between the Strong, Moderate, Weak, Suspect
+# attributes in the input to this program (which is output from vecscreen) and the 
+# alignments in the input because vecscreen loses the correspondence when aignments overlap
+# in the query intervals. For example, if the same query has distinct Strong alignments
+# possibly to different vectors, and spanning query intervals 
+# [50, 80] and [70, 87], the upper part of the vecscreen output reports a Strong match
+# spanning 50 to 87. Therefore,  the adjective to describe an alignment is
+# recomputed within this program by using the score for the alignment and its position in
+# the query compared to the query ends. The aligned query positions determine whether the alignment
+# is Terminal (includes a nucleotide within 25 nucleotides of the query ends) or
+# Internal (does not includes a nucleotide within 25 nucleotides of either query end).
 
 # Initializations
 $state                = $State_Naive;
@@ -461,7 +494,7 @@ while(defined($line = <INPUT>)) {
     # *** line num 38 in above example file ***
     if($print_flag) { 
       if ($alignments_one_query > 0) {
-        # if we've seen an alignment of this query to a previous vector (subject)
+        # if we hae seen an alignment of this query to a previous, distinct vector (subject)
         # (not the same as this vector) then output info on that previous match
         # output situation 3: output a query/vector match n for a query/vector pair with 
         #                     X (X>=1) matches, where n == X when this vector is not the 
@@ -981,17 +1014,17 @@ sub printOutputLine {
 #
 # Synopsis: Returns type of line $line.
 #
-# Args: $line:                 the line of input file
-#       $Linetype_BLASTN:      '0' (hard-coded 'line type' value for BLASTN lines
-#       $Linetype_match:       '1' (hard-coded 'line type' value for match lines
-#       $Linetype_position:    '2' (hard-coded 'line type' value for position lines
+# Args: $line:                  the line of input file
+#       $Linetype_BLASTN:       '0' (hard-coded 'line type' value for BLASTN lines
+#       $Linetype_match:        '1' (hard-coded 'line type' value for match lines
+#       $Linetype_position:     '2' (hard-coded 'line type' value for position lines
 #       $Linetype_query_name:   '3' (hard-coded 'line type' value for query name lines
-#       $Linetype_length:      '4' (hard-coded 'line type' value for length lines
+#       $Linetype_length:       '4' (hard-coded 'line type' value for length lines
 #       $Linetype_vector_name:  '5' (hard-coded 'line type' value for vector name lines
-#       $Linetype_score:       '6' (hard-coded 'line type' value for score lines
+#       $Linetype_score:        '6' (hard-coded 'line type' value for score lines
 #       $Linetype_query_aln:    '7' (hard-coded 'line type' value for query alignment lines
 #       $Linetype_vector_aln:   '8' (hard-coded 'line type' value for vector alignment lines
-#       $Linetype_other:       '9' (hard-coded 'line type' value for other (non-parsed) lines
+#       $Linetype_other:        '9' (hard-coded 'line type' value for other (non-parsed) lines
 #
 # Returns: line type of $line
 # 
