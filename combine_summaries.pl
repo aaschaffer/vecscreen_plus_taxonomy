@@ -1,7 +1,7 @@
 #!/usr/bin/perl -w
 # the first line of perl code has to be above
 #
-# Author: Alejandro Schaffer
+# Authors: Alejandro Schaffer and Eric Nawrocki
 # Code to combine summaries of vecscreen matches from terminal and internal specific summaries; 
 # if strength is available, then Strong goes above Moderate goes above Weak
 # Usage: combine_summaries.pl --input_terminal <input terminal file> \   [REQUIRED]
@@ -22,8 +22,7 @@ my $input_internal_file = undef; # input fasta file
 my $output_file         = undef; # output fasta file for sequences that do not have the forbidden terms
 my $verbose_mode;                # did user specify verbose mode, in which case match strengths are kept track of 
                                  # and extra columns are printed
-my $debug_mode;                  # did user specify verbose mode, in which case match strengths are kept track of 
-                                 # and extra columns are printed
+my $debug_mode;                  # did user specify debug mode, in which case additional diagnostics are printed
 
 # hard-coded information on meaning of columns in the input
 my $ACC_COLUMN = 0;                # the column with the identifier in the input files
@@ -43,13 +42,13 @@ my @terminal_overall_strengths_A;  # overall strengths for each match
 my @internal_overall_strengths_A;  # strengths for each match
 my @terminal_printed_A;            # has each terminal line been printed
 my @internal_printed_A;            # has each internal line been printed
-my %internal_accession_H;          # hash. key: accession, value first lines of that accession in the internal set
+my %internal_accession_H;          # hash. key: accession, value first line of that accession in the internal set
 my %crossfile_overall_strengths_H; # hash. key: accession, value is strongest strength observed for this accession in either file
 my $num_internal_lines;            # number of lines in internal input file
 my $num_terminal_lines;            # number of lines in terminal input file
 
 # variables related to output
-my $current_strength;      # strength of current round of output ("Strong", "Moderate", or "Weak")
+my $current_strength;      # strength of strongest matches in current round of output ("Strong", "Moderate", or "Weak")
 my $terminal_idx;          # index of terminal line to be considered for printing
 my $internal_idx;          # index of internal line to be considered for printing
 my $terminal_accession;    # terminal accession $terminal_accession_A[$terminal_idx]
@@ -150,11 +149,11 @@ $num_internal_lines = parseInputFile($internal_FH, \@internal_lines_A, \@interna
 # have been stored as "Strong" since strength will not be part of the
 # output)
 #
-# For each overall strength we print the accessions in the order they
+# For each overall strength, we print the accessions in the order they
 # existed in the terminal file followed by accessions in the order
 # they existed in the internal file. For any accessions that existed
 # in both files (identified and stored as $repeated_accession) below,
-# all lines for that accession are printed consecutively, in order of 
+# all lines for that accession are printed consecutively, in decreasing order of 
 # strength.
 ##########################################################################
 
