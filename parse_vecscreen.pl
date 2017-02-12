@@ -571,7 +571,7 @@ if ($print_flag) {
       createOutputLine($verbose_mode, $query_name, $overall_query_start, $overall_query_end, $query_length, 
                        $vector_name, $overall_vector_start, $overall_vector_end, $has_strong_match,
                        $has_moderate_match, $has_weak_match, $final_score, $suspect_output_string);
-  printOutputLine($output_line, $internal_FH, $terminal_FH, $internal_match, $debug_mode, $debug_query, 4, $line);
+  printOutputLine($output_line, $internal_FH, $terminal_FH, $internal_match, $debug_mode, $debug_query, $query_name, 4, $line);
 }
 
 # close files and exit
