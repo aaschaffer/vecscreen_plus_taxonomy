@@ -139,7 +139,7 @@ user can use the provided file:
 
 /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
 
-which was created in December 2016. If you are using this in the first
+which was created in March 2017. If you are using this in the first
 few months of 2017, the provided file above should be fine. After
 that, you should create a new up-to-date file. Instructions for doing
 that are provided below in the section CREATING THE TAXONOMY FILE.
