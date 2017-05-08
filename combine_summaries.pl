@@ -390,6 +390,9 @@ sub strengthWordToNumber {
     elsif ($strength_word eq "Weak") { 
       return 1;
     }
+    elsif ($strength_word eq "None") { 
+      return 0;
+    }
 
     die "ERROR in $sub_name, unexpected <strength_word>: $strength_word";
 
