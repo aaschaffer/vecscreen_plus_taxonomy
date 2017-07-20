@@ -1,0 +1,8 @@
+superkingdom_level_exclusions.txt	superkingdom
+kingdom_level_exclusions.txt	kingdom
+phylum_level_exclusions.txt	phylum
+class_level_exclusions.txt	class
+order_level_exclusions.txt	order
+family_level_exclusions.txt	family
+tribe_level_exclusions.txt	tribe
+genus_level_exclusions.txt	genus
