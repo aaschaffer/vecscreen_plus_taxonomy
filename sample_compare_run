@@ -1,0 +1,3 @@
+compare_vector_matches_wtaxa.pl --input_summary test-files/sample_input_final_step.txt  --input_taxa taxonomy_tree_wlevels.txt --input_artificial_vectors artificial_whole_sequences.txt --input_artificial_segments artificial_intervals.txt --input_univec_sources biological_exclusions.txt  --input_amr UniVec10_vs_amr_distinct_intervals.txt --input_sequences test-files/candidates.fa --outfile test-files/sample_output_final_step2.txt
+echo 'comparing expected output test-files/sample_output_final_step.txt to observed output test-files/sample_output_final_step2.txt'
+diff -w test-files/sample_output_final_step.txt test-files/sample_output_final_step2.txt
