@@ -109,9 +109,6 @@ $keep_string    = ($keep_mode)    ? "--keep"    : "";
 # executable commands
 my $vecscreen         = "vecscreen";
 my $srcchk            = "srcchk";
-# EPN COMMENT: I've temporarily changed the name of parse_vecscreen.pl here, this should
-# reverted when the code review is complete.
-#$parse_vecscreen   = "parse_vecscreen.pl";
 my $parse_vecscreen   = "parse_vecscreen.pl";
 my $combine_summaries = "combine_summaries.pl";
 my $add_taxonomy      = "add_taxonomy.pl";

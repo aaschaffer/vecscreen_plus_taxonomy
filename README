@@ -1,9 +1,13 @@
-This file describes
--- a script called from_vecscreen_to_summary.pl and its constituent programs
+ This file describes
+
+-- a script called from_vecscreen_to_summary.pl and its constituent
+programs
+
 and
--- a summary classification program compare_vector_matches_wtaxa.pl
-that can be used to run vecscreen and parse
-its outputs, including taxonomy information.
+
+-- a summary classification script compare_vector_matches_wtaxa.pl
+that can be used to run vecscreen and parse its outputs, including
+taxonomy information.
 
 Outline of this file:
 
@@ -17,84 +21,55 @@ CREATING THE TAXONOMY FILE
 **************
 **BACKGROUND**
 **************
+
 vecscreen is the established NCBI program to identify matches between
 (query) sequences and (subject) vectors in UniVec. These matches may
-represent (true) vector contamination, but experience has shown that there
-can be many false positives.  A primary reason for false positives is
-that the query and the matching subject segment come from the same
-genus or closely related genera. Therefore, knowing the genus of the
-query sequence is helpful to interpret the output.  For what follows
-below, it is relevant that vecscreen distinguishes matches by two
-characteristics:
+represent (true) vector contamination, but experience has shown that
+there can be many false positives.  A primary reason for false
+positives is that the query and the matching subject segment come from
+the same genus or closely related genera. Therefore, knowing the genus
+of the query sequence is helpful to interpret the output.  For what
+follows below, it is relevant that vecscreen distinguishes matches by
+two characteristics:
 
 1) Location: Internal or Terminal 
 A match is Terminal if and only if it includes a nucleotide within 25
 positions of either end of the query; otherwise, the match is Internal.
 
 2) Strength: Strong, Moderate, or Weak
-A match is Strong if either: it is terminal with a raw score of at
-least 24 or it is internal with a raw score of at least 30.
+A match is Strong if either: it is Terminal with a raw score of at
+least 24 or it is Internal with a raw score of at least 30.
 
-A match is Moderate if if either: it is terminal with a raw score in
-the interval [19,23] or internal with a raw score in the interval
-[25,29]. 
+A match is Moderate if either: it is Terminal with a raw score in the
+interval [19,23] or Internal with a raw score in the interval [25,29].
 
-A match is Weak if it is terminal with a raw score in the interval
-[16,18] or internal with a raw score in the interval [23,24].
+A match is Weak if it is Terminal with a raw score in the interval
+[16,18] or Internal with a raw score in the interval [23,24].
 
-vecscreen also reports internal alignments with raw scores in the range [16,
-22] when there is also a reportable match for the same (query, vector)
-pair. The score range [16,22] is below the Weak range match for
-internal matches. In the script from_vecscreen_to_summary.pl, 
-these below-Weak Internal matches are assigned the level None.
+vecscreen also reports Internal alignments with raw scores in the
+range [16, 22] when there is also a reportable match for the same
+(query, vector) pair. The score range [16,22] is below the Weak range
+match for Internal matches. In the script
+from_vecscreen_to_summary.pl, these below-Weak Internal matches are
+assigned the level None.
 
 More information about vecscreen can be found at
 https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
-In this document, 'vecscreen' refers to the command-line version, not the
-Web page version.
+In this document, 'vecscreen' refers to the command-line version, not
+the Web page version.
 
 ******************
 **RELEVANT FILES**
 ******************
 Several executable files are required for from_vecscreen_to_summary.pl
 to work. Two of these executables were developed by others and must be
-downloaded and installed separately outside of NCBI. The full list of files is:
+downloaded and installed separately outside of NCBI. The full list of
+files is:
 
-1. from_vecscreen_to_summary.pl 
-   This is the main script that coordinates the work by calling 
-   the other executables listed below.
+The first two files are NCBI executable programs that were not authored by
+Alejandro Schaffer:
 
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/from_vecscreen_to_summary.pl
-
-2. parse_vecscreen.pl
-   Auxiliary script called by from_vecscreen_to_summary.pl that parses
-   the vecscreen output.
-   
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/parse_vecscreen.pl
-
-3. combine_summaries.pl
-   Auxiliary script called by from_vecscreen_to_summary.pl that 
-   combines two different output formats of parse_vecscreen.pl
-
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/combine_summaries.pl
-
-4. add_taxonomy.pl
-   Auxiliary script called by from_vecscreen_to_summary.pl that 
-   adds taxonomy information to the output of parse_vecscreen.pl.
-
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/add_taxonomy.pl
-
-5. assign_levels_to_taxonomy.pl
-   Independent script that is used to create a taxonomy file from the
-   NCBI taxonomy. The file produced by assign_levels_to_taxonomy.pl
-   is required input to from_vecscreen_to_summary.pl.
-
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9a/assign_levels_to_taxonomy.pl
-
-The next two files are NCBI programs that were not authored by Alejandro
-Schaffer: 
-
-6. vecscreen 
+1. vecscreen 
    Identifies vector contamination in input sequences.
 
    Within NCBI, vecscreen can be found at
@@ -106,8 +81,9 @@ Schaffer:
    External users can download vecscreen here:
    TODO
 
-7. srcchk 
-   Determines the taxonomy of input sequences, with respect the NCBI taxonomy tree.
+2. srcchk 
+   Determines the taxonomy of input sequences, with respect the NCBI
+   taxonomy tree.
 
    Within NCBI, srcchk can be found at
    /netopt/ncbi_tools64/bin/srcchk
@@ -118,27 +94,65 @@ Schaffer:
    External users can download srcchk here:
    TODO
 
+The next 6 files were included with this software distribution: 
+
+3. from_vecscreen_to_summary.pl 
+   This is the main script that coordinates the work by calling the
+   other executables listed below.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/from_vecscreen_to_summary.pl
+
+4. parse_vecscreen.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that parses
+   the vecscreen output.
+   
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/parse_vecscreen.pl
+
+5. combine_summaries.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that
+   combines two different output formats of parse_vecscreen.pl
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/combine_summaries.pl
+
+6. add_taxonomy.pl
+   Auxiliary script called by from_vecscreen_to_summary.pl that adds
+   taxonomy information to the output of parse_vecscreen.pl.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/add_taxonomy.pl
+
+7. assign_levels_to_taxonomy.pl
+   Independent script that is used to create a taxonomy file from the
+   NCBI taxonomy. The file produced by assign_levels_to_taxonomy.pl is
+   required input to from_vecscreen_to_summary.pl.
+
+   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9a/assign_levels_to_taxonomy.pl
+
+
 8. epn-options.pm
-   A perl module authored by Eric Nawrocki to handle command
-   line options.
+   A perl module authored by Eric Nawrocki to handle command line
+   options.
 
    /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/epn-options.pm
 
-Several sets of data files are required for compare_vector_matches_wtaxa.pl
-to work.
+Additionally, several sets of data files are required for
+compare_vector_matches_wtaxa.pl to work. These were all included with
+this software distribution. 
 
-1. taxonomy_tree_wlevels.txt A compact form of NCBI's taxonomy tree
-   with added fields to indicate for each taxid, its level and whether
-   it is a descendant of the node Bacteria.  Descendants of Bacteria
-   are treated specially because many sequences are now assigned to
-   the generic taxid "Uncultured bacteria"
+1. taxonomy_tree_wlevels.txt 
+   A compact form of NCBI's taxonomy tree with added fields to
+   indicate for each taxid, its level and whether it is a descendant
+   of the node Bacteria.  Descendants of Bacteria are treated
+   specially because many sequences are now assigned to the generic
+   taxid "Uncultured bacteria"
 
 2. UniVec10_vs_amr_distinct_intervals.txt
-   Intervals of vectors from UniVec version 10 that overlap with known antimicrobial resistance (AMR) regions.
+   Intervals of vectors from UniVec version 10 that overlap with known
+   antimicrobial resistance (AMR) regions.
 
 3. artificial_intervals.txt, artificial_whole_sequences.txt
-   Vector intervals or whole vectors that were generated in a laboratory, not
-   from a biological source. Many of these are known also as "adaptors".
+   Vector intervals or whole vectors that were generated in a
+   laboratory, not from a biological source. Many of these are known
+   also as "adaptors".
 
 4. biological_exclusions.txt (which lists the following files)
    superkingdom_level_exclusions.txt
@@ -150,55 +164,62 @@ to work.
    tribe_level_exclusions.txt
    genus_level_exclusions.txt
 
-   The last listed file genus_level_exclusions.txt describes the biological sources
-   of vector segments at genus level. The other files summarize in silico sequence
-   analysis that shows that some vector segments are conserved at seven taxonomic levels
-   higher than genus. In these files, as well as artificial_intervals.txt,
+   The last listed file genus_level_exclusions.txt describes the
+   biological sources of vector segments at genus level. The other
+   files summarize in silico sequence analysis that shows that some
+   vector segments are conserved at seven taxonomic levels higher than
+   genus. In these files, as well as artificial_intervals.txt:
    Column 1 is the vector segment using UniVec notation
    Columns 2 and 3 are the start and end of the interval
    Column 4 is the taxid
    Column 5 is either the Latin or English name for the taxid
 
-5. Microsatellite_vectors.txt a list of vectors that contain microsatellites;
-   Sequences that have known microsatellites and match to these vectors are
-   classified specially as TRUE_MICROSAT or TRUE_ARTIFICAL_MICROSAT
+5. Microsatellite_vectors.txt a list of vectors that contain
+   microsatellites; Sequences that have known microsatellites and
+   match to these vectors are classified specially as TRUE_MICROSAT or
+   TRUE_ARTIFICAL_MICROSAT
 
 6. compare_vector_matches_wtaxa.pl
-   Program to classify vecscreen matches that have already been parsed with from_vecscreen_to_summary.pl
-   Matches can be classified as:
- 1. NO_DATA:           there is no data about the source of the vector segment
-                       in the match.
 
- 2. TRUE_ARTIFICIAL:   the vector segment matched is an ARTIFICIAL sequence and
-                       hence the match is TRUE contamination.
+   Program to classify vecscreen matches that have already been parsed
+   with from_vecscreen_to_summary.pl. Matches can be classified as:
 
- 3. TRUE_ARTIFICIAL_MICROSAT:   the vector segment matched is an ARTIFICIAL sequence and
-                       hence the match is TRUE contamination and the vector contains a microsatellite.
+ A. NO_DATA:           there is no data about the source of the vector
+                       segment in the match.
 
- 4. FALSE_AMR:         The query sequence is bacterial; the vector segment matches
-                       a known sequence that confers anti-microbial resistance
-                       and these can often be transferred horizontally between
-                       bacteria that may be taxonomically distant.
+ B. TRUE_ARTIFICIAL:   the vector segment matched is an ARTIFICIAL
+                       sequence and hence the match is TRUE
+                       contamination.
 
- 5. FALSE_BIOLOGICAL:  The subject's biological origin is known and its taxid is
-                       deemed close enough to
-                       that of the query, so that the match is not contamination.
+ C. TRUE_ARTIFICIAL_MICROSAT: the vector segment matched is an
+                              ARTIFICIAL sequence and hence the match
+                              is TRUE contamination and the vector
+                              contains a microsatellite.
 
- 6. TRUE_BIOLOGICAL :  The query and the matching subject originate from
+ D. FALSE_AMR:         the query sequence is bacterial; the vector
+                       segment matches a known sequence that confers
+                       anti-microbial resistance and these can often
+                       be transferred horizontally between bacteria
+                       that may be taxonomically distant.
+
+ E. FALSE_BIOLOGICAL:  the subject's biological origin is known and
+                       its taxid is deemed close enough to that of the
+                       query, so that the match is not contamination.
+
+ F. TRUE_BIOLOGICAL :  the query and the matching subject originate from
                        taxa that are too far apart for the vector to occur
                        plausibly in the query.
 
- 7. TRUE_MICROSAT :    The query and the matching subject originate from
-                       taxa that are too far apart for the vector to occur
-                       plausibly in the query, and the vector contains a microsatellite.
+ G. TRUE_MICROSAT :    the query and the matching subject originate from
+                       taxa that are too far apart for the vector to
+                       occur plausibly in the query, and the vector
+                       contains a microsatellite.
 
- 8. LIKE_FALSE_BACTERIAL: The query is from uncultured bacteria and the matching subject is
-                        from bacteria
+ H. LIKE_FALSE_BACTERIAL: the query is from uncultured bacteria and
+                          the matching subject isfrom bacteria
 
 7. sample_compare_run
-   Example usage of compare_vector_matches_wtaxa.pl
-   
-   
+   Example usage of compare_vector_matches_wtaxa.pl. 
 
 *********************
 **USAGE AND OPTIONS**
@@ -207,14 +228,15 @@ Here is an example command that will run from_vecscreen_to_summary.pl
 on the fasta file myseqs.fa using the taxonomy file
 taxonomy_tree_wlevels.txt.
 
-> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa taxonomy_tree_wlevels.txt
+> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa taxonomy_tree_wlevels.txt --output_root mytest
 
-The sequence file (myseqs.fa) can be any nucleotide sequence file in FASTA format.
+The sequence file (myseqs.fa) can be any nucleotide sequence file in
+FASTA format.
 
 The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
-format that includes taxonomy information based on NCBI's taxonomy. This
-can either be created by the user from the NCBI taxonomy file, or the
-user can use the provided file:
+format that includes taxonomy information based on NCBI's
+taxonomy. This can either be created by the user from the NCBI
+taxonomy file, or the user can use the provided file:
 
 /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
 
@@ -224,53 +246,53 @@ that, you should create a new up-to-date file. Instructions for doing
 that are provided below in the section CREATING THE TAXONOMY FILE.
 
 The options that can be provided to from_vecscreen_to_summary.pl are:
-  --input_fasta <s> : REQUIRED file name <s> with sequences in fasta format 
-  --input_taxa <s>  : REQUIRED file name <s> mapping vecscreen matches to taxa
-  --output_root <s> : REQUIRED root for output files names
-  --verbose         : be verbose in output
+  --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 
+  --input_taxa <s>  : REQUIRED: file name <s> mapping vecscreen matches to taxa
+  --output_root <s> : REQUIRED: output files will be named starting with <s>
+  --verbose         : output 11 columns instead of 5
   --combine_output  : combine internal and terminal matches
-  --keep	    : keep temporary vecscreen output file
+  --keep	    : keep all intermediate files (e.g. vecscreen output)
 
-
-The  --input_fasta <s> and --input_taxa <s> and --output_root <s>
+The --input_fasta <s> and --input_taxa <s> and --output_root <s>
 options are required when running from_vecscreen_to_summary.pl, while
---verbose and --combine_output and --keep are optional.
-By default --verbose and --combine_output and --keep are all turned off.
+--verbose and --combine_output and --keep are optional.  By default
+--verbose and --combine_output and --keep are all turned off.
 
 The --combine_output option determines whether one or two files of
 output are produced.  Currently the names of the output files are
-partly fixed at: 
+partly fixed at:
 <output_root>.output_combined_wtaxonomy.txt (if --combine_output is applied) 
 <output_root>.output_internal_wtaxonomy.txt (if --combine_output is not applied) 
 <output_root>.output_terminal_wtaxonomy.txt (if --combine_output is not applied)
 
 The option --verbose determines how many columns of output are
-produced, as described in the OUTPUT section below. It does not
-cause more diagnostic output to be printed during the execution
-of the script.
+produced, as described in the OUTPUT section below. It does not cause
+more diagnostic output to be printed during the execution of the
+script.
 
-The option --keep determines whether the output file from
-running vecscreen within the script is kept (--keep on) or
-deleted (--keep off, default).
+The option --keep determines whether the output file from running
+vecscreen within the script is kept (--keep usedn) or deleted (--keep
+not used, default).
 
-Here is the example usage of compare_vector_matches_wtaxa.pl in sample_compare_run
+Here is the example usage of compare_vector_matches_wtaxa.pl in
+sample_compare_run
 
-compare_vector_matches_wtaxa.pl --input_summary \
-test-files/sample_input_final_step.txt --input_taxa \
-taxonomy_tree_wlevels.txt --input_artificial_vectors artificial_whole_sequences.txt --input_artificial_segments \
-artificial_intervals.txt --input_univec_sources \
-biological_exclusions.txt --input_amr UniVec10_vs_amr_distinct_int \
-ervals.txt --input_sequences test-files/candidates.fa --outfile \
-test-files/sample_output_final_step2.txt
-
+compare_vector_matches_wtaxa.pl \ 
+--input_summary test-files/sample_input_final_step.txt \ 
+--input_taxa taxonomy_tree_wlevels.txt \ 
+--input_artificial_vectors artificial_whole_sequences.txt \ 
+--input_artificial_segments artificial_intervals.txt \ 
+--input_univec_sources biological_exclusions.txt \ 
+--input_amr UniVec10_vs_amr_distinct_intervals.txt \
+--input_sequences test-files/candidates.fa \
+--outfile test-files/sample_output_final_step2.txt
 
 ***********
 **METHODS**
 ***********
 
 Given the input taxonomy file and an input sequence file in FASTA
-format, from_vecscreen_to_summary.pl will
-do the following:
+format, from_vecscreen_to_summary.pl will do the following:
 
 1) Run vecscreen on the input FASTA-formatted sequence file to
    identify high-scoring matches to known vector sequences in UniVec
@@ -285,12 +307,10 @@ do the following:
 4) Add taxonomy information to the vecscreen output by calling srcchk
    and add_taxonomy.pl.
 
-
-compare_vector_matches_wtaxa.pl uses the six sets of data files listed to
-classify each vecscreen match.
-This program is separate because an in-house usage needed somewhat
-different I/O specifications to fit into an existing software
-framework.
+compare_vector_matches_wtaxa.pl uses the six sets of data files listed
+to classify each vecscreen match.  This program is separate because an
+in-house usage needed somewhat different I/O specifications to fit
+into an existing software framework.
 
 **********
 **OUTPUT**
@@ -315,37 +335,40 @@ This 5 column format was agreed on for internal NCBI usage in JIRA
 ticket SM-187.
 
 ----------------------------------------------------------------
-Verbose output format (enabled with --verbose option: 11 columns
+Verbose output format (enabled with --verbose option): 11 columns
 ----------------------------------------------------------------
 If --verbose is used, then each line of output will include the
 following 11 columns:
 
-Column 1: Accession of query
-Column 2: Genus of query if known, or 1 otherwise
-Column 3: Species of query if known, or 1 otherwise
-Column 4: Lower end of the alignment in the vector
-Column 5: Upper end of the alignment in the vector
-Column 6: Matching vector, starting with uv|
-Column 7: One end of the alignment in the vector
-Column 8: The other end of the alignment in the vector
-Column 9: The strength of this vecscreen match 
+Column 1:  Accession of query
+Column 2:  Genus of query if known, or 1 otherwise
+Column 3:  Species of query if known, or 1 otherwise
+Column 4:  Lower end of the alignment in the vector
+Column 5:  Upper end of the alignment in the vector
+Column 6:  Matching vector, starting with uv|
+Column 7:  One end of the alignment in the vector
+Column 8:  The other end of the alignment in the vector
+Column 9:  The strength of this vecscreen match 
 Column 10: The strength of the strongest vecscreen match for this query
-Column 11: Whether there is any dangling part (called "Suspect" by vecscreen) at either end of the query
+Column 11: Whether there is any dangling part (called "Suspect" by
+           vecscreen) at either end of the query
 
-A dangling part is an unmatched segment of <= 25 nucleotides.  
+A dangling part is an unmatched segment of <= 25 nucleotides.
 
 This alternative 11-column format has been shown to be useful for some
 purposes, such as correcting vector-contaminated sequences in GenBank.
 
-The version of compare_vector_matches_wtaxa.pl presented here adds a 12th column,
-which is the classification of the match. It also adds
-Column 13: Most pertinent taxid of the vector interval
+The version of compare_vector_matches_wtaxa.pl presented here adds
+three additional columns:
+Column 12: the classification of the match
+Column 13: Most pertinent taxid of the vector interval 
 Column 14: Lowest common ancestor of column 2 and column 13
 
-In some cases, the classification TRUE_BIOLOGICAL may be too bold and this can be seen
-because Column 14 is not much higher up the taxonomy tree than column 13.
-When this happens, the conservation of the vector source needs to be propagated
-from genus_level_exclusions.txt to one of the higher-level files:
+In some cases, the classification TRUE_BIOLOGICAL may be too bold and
+this can be seen because Column 14 is not much higher up the taxonomy
+tree than column 13.  When this happens, the conservation of the
+vector source needs to be propagated from genus_level_exclusions.txt
+to one of the higher-level files*:
    superkingdom_level_exclusions.txt
    kingdom_level_exclusions.txt
    phylum_level_exclusions.txt
@@ -354,6 +377,8 @@ from genus_level_exclusions.txt to one of the higher-level files:
    family_level_exclusions.txt
    tribe_level_exclusions.txt
 
+* Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
+  these.
 
 ******************************
 **CREATING THE TAXONOMY FILE**
@@ -383,11 +408,13 @@ Column 3: rank (e.g., phylum) as a word
 
 Running assign_levels_to_taxonomy.pl will add a fourth column which is
 the level in the taxonomy tree, where the root has level 1 and each
-child taxid has a level one greater than the level of its parent taxid.
+child taxid has a level one greater than the level of its parent
+taxid.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
 (schaffer@ncbi.nlm.nih.gov)
-New information about vector biological sources and
-cases in which known genus-level sources should
-be propagated to a higher level are especially welcome.
+
+New information about vector biological sources and cases in which
+known genus-level sources should be propagated to a higher level are
+especially welcome.
