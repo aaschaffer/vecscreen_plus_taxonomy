@@ -1,10 +1,17 @@
- This file describes
+vecscreen_plus_taxonomy
+Author: Alejandro Schaffer
+
+github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
+Version: 0.02
+------------------
+README
+
+This file describes
 
 -- a script called from_vecscreen_to_summary.pl and its constituent
 programs
 
 and
-
 -- a summary classification script compare_vector_matches_wtaxa.pl
 that can be used to run vecscreen and parse its outputs, including
 taxonomy information.
