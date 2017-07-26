@@ -79,18 +79,21 @@ directory. To determine what shell you use type 'echo $SHELL', if it
 returns '/bin/bash', then update your .bashrc file, if it returns
 '/bin/csh' or '/bin/tcsh' then update your .cshrc file.
 
-The 2 lines to add to your .bashrc file, ***but make sure that you
-replace *PATH/TO/VEC/PLUS* with the directory path to the directory
-created when you unpacked the FIXME tarball.
+The 3 lines to add to your .bashrc file, ***but make sure that you
+replace PATH/TO/VEC/PLUS with the directory path to the directory
+created when you unpacked the vecscreen_plus_taxonomy-0.03.tar.gz
+tarball.
 
 -----------
-export VECPLUSDIR="*PATH/TO/VEC/PLUS*"
+export VECPLUSDIR="PATH/TO/VEC/PLUS"
+export PERL5LIB="$EPNOPTDIR:$PERL5LIB"
 export PATH="$VECPLUSDIR:$PATH";
 -----------
 
-The 2 lines to add to your .cshrc file:
+The 3 lines to add to your .cshrc file:
 -----------
-setenv SENSORDIR "*PATH/TO/VEC/PLUS"
+setenv SENSORDIR "PATH/TO/VEC/PLUS"
+setenv PERL5LIB "$EPNOPTDIR":"$PERL5LIB"
 setenv PATH "$VECPLUSDIR":"$PATH"
 -----------
 
@@ -105,11 +108,11 @@ echo $VECPLUSDIR
 echo $PATH
 
 The first command should return only:
-*PATH/TO/VEC/PLUS*
+PATH/TO/VEC/PLUS
 
 The second echo commands should return a potentially longer
 string that begins with the same path:
-*PATH/TO/VEC/PLUS*
+PATH/TO/VEC/PLUS
 
 If that is not the case, please email Eric Nawrocki
 (nawrocke@ncbi.nlm.nih.gov). If you do see the expected output, the
@@ -120,23 +123,24 @@ following sample run should work.
 ****************************************************************
 Here is an example command that will run from_vecscreen_to_summary.pl
 on the fasta file myseqs.fa using the taxonomy file
-taxonomy_tree_wlevels.txt. (An example of running compare
+taxonomy_tree_wlevels.txt. 
 
-> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt --output_root mytest
+> from_vecscreen_to_summary.pl --input_fasta $VECPLUSDIR/myseqs.fa --input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt --output_root mytest
 
 The sequence file (myseqs.fa) can be any nucleotide sequence file in
-FASTA format.
+FASTA format. This file is located in the $VECPLUSDIR (which you set
+to PATH/TO/VEC/PLUS in the SETTING UP ENVIRONMENT VARIABLES section
+above. 
 
 The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
 format that includes taxonomy information based on NCBI's
 taxonomy. This can either be created by the user from the NCBI
-taxonomy file, or the user can use the provided file:
-
-/panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
-which was created in March 2017. If you are using this in the first
-few months of 2017, the provided file above should be fine. After
-that, you should create a new up-to-date file. Instructions for doing
-that are provided below in the section CREATING THE TAXONOMY FILE.
+taxonomy file, or the user can use the provided file
+taxonomy_tree_wlevels.txt which was created in March 2017. If you are
+using this in the first few months of 2017, the provided file above
+should be fine. After that, you should create a new up-to-date
+file. Instructions for doing that are provided below in the section
+CREATING THE TAXONOMY FILE.
 
 The options that can be provided to from_vecscreen_to_summary.pl are:
   --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 

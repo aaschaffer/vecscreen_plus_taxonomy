@@ -115,9 +115,9 @@ my $add_taxonomy      = "add_taxonomy.pl";
 
 # set output file names
 my $temp_vecscreen_output_file     = $output_root . ".vecscreen_output.txt";
-my $internal_output_file           = $output_root . ".output_internal.txt";
-my $terminal_output_file           = $output_root . ".output_terminal.txt";
-my $combined_output_file           = $output_root . ".output_combined.txt";
+my $temp_internal_output_file      = $output_root . ".output_internal.txt";
+my $temp_terminal_output_file      = $output_root . ".output_terminal.txt";
+my $temp_combined_output_file      = $output_root . ".output_combined.txt";
 my $combined_wtaxonomy_output_file = $output_root . ".output_combined_wtaxonomy.txt";
 my $terminal_wtaxonomy_output_file = $output_root . ".output_terminal_wtaxonomy.txt";
 my $internal_wtaxonomy_output_file = $output_root . ".output_internal_wtaxonomy.txt";
@@ -137,7 +137,7 @@ opt_OutputPreamble(*STDOUT, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
 ##########################
 # Step 1. Call vecscreen #
 ##########################
-my $progress_w = 50; # the width of the left hand column in our progress output, hard-coded
+my $progress_w = 51; # the width of the left hand column in our progress output, hard-coded
 my $start_secs = output_progress_prior("Running vecscreen", $progress_w, undef, *STDOUT);
 run_command("$vecscreen -query $input_fasta_file -text_output > $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
 my $desc_str = sprintf("output saved as $temp_vecscreen_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
@@ -147,8 +147,8 @@ output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 # Step 2. Parse vecscreen output #
 ##################################
 $start_secs = output_progress_prior("Parsing vecscreen output", $progress_w, undef, *STDOUT);
-run_command("$parse_vecscreen --input $temp_vecscreen_output_file $verbose_string --outfile_internal $internal_output_file --outfile_terminal $terminal_output_file", 0); # 0: don't echo command to STDOUT
-$desc_str = "output saved as $internal_output_file and $terminal_output_file";
+run_command("$parse_vecscreen --input $temp_vecscreen_output_file $verbose_string --outfile_internal $temp_internal_output_file --outfile_terminal $temp_terminal_output_file", 0); # 0: don't echo command to STDOUT
+$desc_str = sprintf("output saved as $temp_internal_output_file and $temp_terminal_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
 output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 
 ###############################################
@@ -156,8 +156,8 @@ output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 ###############################################
 if ($combine_summaries_mode) {
   $start_secs = output_progress_prior("Combining output [due to --combine_output]", $progress_w, undef, *STDOUT);
-  run_command("$combine_summaries --input_terminal $terminal_output_file --input_internal $internal_output_file $verbose_string --outfile $combined_output_file", 0); # 0: don't echo command to STDOUT
-  $desc_str = "output saved as $combined_output_file";
+  run_command("$combine_summaries --input_terminal $temp_terminal_output_file --input_internal $temp_internal_output_file $verbose_string --outfile $temp_combined_output_file", 0); # 0: don't echo command to STDOUT
+  $desc_str = sprintf("output saved as $temp_combined_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 
@@ -166,14 +166,14 @@ if ($combine_summaries_mode) {
 ####################################
 if($combine_summaries_mode) { 
   $start_secs = output_progress_prior("Adding taxonomy information to output", $progress_w, undef, *STDOUT);
-  run_command("$add_taxonomy --input_summary $combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command("$add_taxonomy --input_summary $temp_combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 else {
   $start_secs = output_progress_prior("Adding taxonomy information to output in two stages", $progress_w, undef, *STDOUT);
-  run_command("$add_taxonomy --input_summary $internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
-  run_command("$add_taxonomy --input_summary $terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command("$add_taxonomy --input_summary $temp_internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command("$add_taxonomy --input_summary $temp_terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $internal_wtaxonomy_output_file and $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
@@ -182,9 +182,16 @@ else {
 # Step 5. Clean up #
 ####################
 if(! $keep_mode) { 
-  $start_secs = output_progress_prior("Cleaning up temporary vecscreen output file", $progress_w, undef, *STDOUT);
-  run_command("rm -f $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
-  $desc_str = "deleted $temp_vecscreen_output_file";
+  $start_secs = output_progress_prior("Cleaning up temporary files", $progress_w, undef, *STDOUT);
+  run_command("rm -f $temp_vecscreen_output_file $temp_internal_output_file $temp_terminal_output_file", 0); # 0: don't echo command to STDOUT
+  $desc_str = "deleted $temp_vecscreen_output_file, $temp_internal_output_file";
+  if($combine_summaries_mode) { 
+    run_command("rm -f $temp_combined_output_file", 0); # 0: don't echo command to STDOUT
+    $desc_str .= ", $temp_terminal_output_file and $temp_combined_output_file";
+  }
+  else { 
+    $desc_str .= " and $temp_terminal_output_file";
+  }
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 
