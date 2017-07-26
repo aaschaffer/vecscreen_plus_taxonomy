@@ -12,10 +12,11 @@ taxonomy information.
 Outline of this file:
 
 BACKGROUND
+SETTING UP ENVIRONMENT VARIABLES
+SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl
+SAMPLE RUN, USAGE AND OUTPUT OF compare_vector_matches_w_taxa.pl
 RELEVANT FILES
-USAGE AND OPTIONS
 METHODS
-OUTPUT
 CREATING THE TAXONOMY FILE
 
 **************
@@ -58,13 +59,202 @@ https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
 In this document, 'vecscreen' refers to the command-line version, not
 the Web page version.
 
+************************************
+**SETTING UP ENVIRONMENT VARIABLES**
+************************************
+
+Before you can run from_vecscreen_to_summary.pl or
+compare_vector_matches_wtaxa.pl you will need to update some of your
+command line variables. To do this, add the following three lines to
+your .bashrc file (if you use bash shell) or .cshrc file (if you use C
+shell or tcsh). The .bashrc or .cshrc file will be in your home
+directory. To determine what shell you use type 'echo $SHELL', if it
+returns '/bin/bash', then update your .bashrc file, if it returns
+'/bin/csh' or '/bin/tcsh' then update your .cshrc file.
+
+The 2 lines to add to your .bashrc file, ***but make sure that you
+replace *PATH/TO/VEC/PLUS* with the directory path to the directory
+created when you unpacked the FIXME tarball.
+
+-----------
+export VECPLUSDIR="*PATH/TO/VEC/PLUS*"
+export PATH="$VECPLUSDIR:$PATH";
+-----------
+
+The 2 lines to add to your .cshrc file:
+-----------
+setenv SENSORDIR "*PATH/TO/VEC/PLUS"
+setenv PATH "$VECPLUSDIR":"$PATH"
+-----------
+
+Then, after adding those 2 lines, execute this command:
+source ~/.bashrc
+OR
+source ~/.cshrc
+
+To check that your environment variables are properly set up do the
+following three commands:
+echo $VECPLUSDIR
+echo $PATH
+
+The first command should return only:
+*PATH/TO/VEC/PLUS*
+
+The second echo commands should return a potentially longer
+string that begins with the same path:
+*PATH/TO/VEC/PLUS*
+
+If that is not the case, please email Eric Nawrocki
+(nawrocke@ncbi.nlm.nih.gov). If you do see the expected output, the
+following sample run should work.
+
+****************************************************************
+**SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl**
+****************************************************************
+Here is an example command that will run from_vecscreen_to_summary.pl
+on the fasta file myseqs.fa using the taxonomy file
+taxonomy_tree_wlevels.txt. (An example of running compare
+
+> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt --output_root mytest
+
+The sequence file (myseqs.fa) can be any nucleotide sequence file in
+FASTA format.
+
+The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
+format that includes taxonomy information based on NCBI's
+taxonomy. This can either be created by the user from the NCBI
+taxonomy file, or the user can use the provided file:
+
+/panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
+which was created in March 2017. If you are using this in the first
+few months of 2017, the provided file above should be fine. After
+that, you should create a new up-to-date file. Instructions for doing
+that are provided below in the section CREATING THE TAXONOMY FILE.
+
+The options that can be provided to from_vecscreen_to_summary.pl are:
+  --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 
+  --input_taxa <s>  : REQUIRED: file name <s> mapping vecscreen matches to taxa
+  --output_root <s> : REQUIRED: output files will be named starting with <s>
+  --verbose         : output 11 columns instead of 5
+  --combine_output  : combine internal and terminal matches
+  --keep	    : keep all intermediate files (e.g. vecscreen output)
+
+The --input_fasta <s> and --input_taxa <s> and --output_root <s>
+options are required when running from_vecscreen_to_summary.pl, while
+--verbose and --combine_output and --keep are optional.  By default
+--verbose and --combine_output and --keep are all turned off.
+
+The --combine_output option determines whether one or two files of
+output are produced.  Currently the names of the output files are
+partly fixed at:
+<output_root>.output_combined_wtaxonomy.txt (if --combine_output is applied) 
+<output_root>.output_internal_wtaxonomy.txt (if --combine_output is not applied) 
+<output_root>.output_terminal_wtaxonomy.txt (if --combine_output is not applied)
+
+The option --verbose determines how many columns of output are
+produced, as described in the OUTPUT section below. It does not cause
+more diagnostic output to be printed during the execution of the
+script.
+
+The option --keep determines whether the output file from running
+vecscreen within the script is kept (--keep used) or deleted (--keep
+not used, default).
+
+from_vecscreen_to_summary.pl will create one line of tabular output
+per vecscreen hit in the input sequence file. There are two possible
+output formats. For both formats, columns are separated by tabs.
+
+--------------------------------
+Default output format: 5 columns
+--------------------------------
+By default (if --verbose is not used) then the format of those lines
+will be the following five columns:
+
+Column 1: Accession of query
+Column 2: Genus of query if known, or 1 otherwise
+Column 3: Matching vector, starting with uv|
+Column 4: One end of the alignment in the vector
+Column 5: The other end of the alignment in the vector
+
+This 5 column format was agreed on for internal NCBI usage in JIRA
+ticket SM-187.
+
+----------------------------------------------------------------
+Verbose output format (enabled with --verbose option): 11 columns
+----------------------------------------------------------------
+If --verbose is used, then each line of output will include the
+following 11 columns:
+
+Column 1:  Accession of query
+Column 2:  Genus of query if known, or 1 otherwise
+Column 3:  Species of query if known, or 1 otherwise
+Column 4:  Lower end of the alignment in the vector
+Column 5:  Upper end of the alignment in the vector
+Column 6:  Matching vector, starting with uv|
+Column 7:  One end of the alignment in the vector
+Column 8:  The other end of the alignment in the vector
+Column 9:  The strength of this vecscreen match 
+Column 10: The strength of the strongest vecscreen match for this query
+Column 11: Whether there is any dangling part (called "Suspect" by
+           vecscreen) at either end of the query
+
+A dangling part is an unmatched segment of <= 25 nucleotides.
+
+This alternative 11-column format has been shown to be useful for some
+purposes, such as correcting vector-contaminated sequences in GenBank.
+
+*********************************************************************
+**SAMPLE RUN, USAGE, AND OUTPUT OF compare_vector_matches_w_taxa.pl**
+*********************************************************************
+The compare_vector_matches_w_taxa.pl script can only be run on the
+11-column output of from_vecscreen_to_summary.pl that is created when
+the --verbose option is used for that script.
+
+Here is the example usage of compare_vector_matches_wtaxa.pl. This
+command is included as a shell script in the file sample_compare_run. 
+
+compare_vector_matches_wtaxa.pl \ 
+--input_summary $VECPLUSDIR/test-files/sample_input_final_step.txt \ 
+--input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt \ 
+--input_artificial_vectors $VECPLUSDIR/artificial_whole_sequences.txt \ 
+--input_artificial_segments $VECPLUSDIR/artificial_intervals.txt \ 
+--input_univec_sources $VECPLUSDIR/biological_exclusions.txt \ 
+--input_amr $VECPLUSDIR/UniVec10_vs_amr_distinct_intervals.txt \
+--input_sequences $VECPLUSDIR/test-files/candidates.fa \
+--outfile my_output_final_step2.txt
+
+After running this, the file 'my_output_final_step.txt' will include
+the output of compare_vector_matches_wtaxa.pl which is the file
+test-files/sample_input_final_step.txt with 3 additional columns:
+
+Column 12: the classification of the match
+Column 13: Most pertinent taxid of the vector interval 
+Column 14: Lowest common ancestor of column 2 and column 13
+
+In some cases, the classification TRUE_BIOLOGICAL may be too bold and
+this can be seen because Column 14 is not much higher up the taxonomy
+tree than column 13.  When this happens, the conservation of the
+vector source needs to be propagated from genus_level_exclusions.txt
+to one of the higher-level files*:
+   superkingdom_level_exclusions.txt
+   kingdom_level_exclusions.txt
+   phylum_level_exclusions.txt
+   class_level_exclusions.txt
+   order_level_exclusions.txt
+   family_level_exclusions.txt
+   tribe_level_exclusions.txt
+
+* Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
+  these.
+
 ******************
 **RELEVANT FILES**
 ******************
 Several executable files are required for from_vecscreen_to_summary.pl
 to work. Two of these executables were developed by others and must be
-downloaded and installed separately outside of NCBI. The full list of
-files is:
+downloaded and installed separately outside of NCBI. All of these
+files are included in the FIXME tarball, so you do not need to create or
+move any files in order to get from_vecscreen_to_summary.pl to work.
 
 The first two files are NCBI executable programs that were not authored by
 Alejandro Schaffer:
@@ -221,72 +411,6 @@ this software distribution.
 7. sample_compare_run
    Example usage of compare_vector_matches_wtaxa.pl. 
 
-*********************
-**USAGE AND OPTIONS**
-*********************
-Here is an example command that will run from_vecscreen_to_summary.pl
-on the fasta file myseqs.fa using the taxonomy file
-taxonomy_tree_wlevels.txt.
-
-> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa taxonomy_tree_wlevels.txt --output_root mytest
-
-The sequence file (myseqs.fa) can be any nucleotide sequence file in
-FASTA format.
-
-The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
-format that includes taxonomy information based on NCBI's
-taxonomy. This can either be created by the user from the NCBI
-taxonomy file, or the user can use the provided file:
-
-/panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
-
-which was created in March 2017. If you are using this in the first
-few months of 2017, the provided file above should be fine. After
-that, you should create a new up-to-date file. Instructions for doing
-that are provided below in the section CREATING THE TAXONOMY FILE.
-
-The options that can be provided to from_vecscreen_to_summary.pl are:
-  --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 
-  --input_taxa <s>  : REQUIRED: file name <s> mapping vecscreen matches to taxa
-  --output_root <s> : REQUIRED: output files will be named starting with <s>
-  --verbose         : output 11 columns instead of 5
-  --combine_output  : combine internal and terminal matches
-  --keep	    : keep all intermediate files (e.g. vecscreen output)
-
-The --input_fasta <s> and --input_taxa <s> and --output_root <s>
-options are required when running from_vecscreen_to_summary.pl, while
---verbose and --combine_output and --keep are optional.  By default
---verbose and --combine_output and --keep are all turned off.
-
-The --combine_output option determines whether one or two files of
-output are produced.  Currently the names of the output files are
-partly fixed at:
-<output_root>.output_combined_wtaxonomy.txt (if --combine_output is applied) 
-<output_root>.output_internal_wtaxonomy.txt (if --combine_output is not applied) 
-<output_root>.output_terminal_wtaxonomy.txt (if --combine_output is not applied)
-
-The option --verbose determines how many columns of output are
-produced, as described in the OUTPUT section below. It does not cause
-more diagnostic output to be printed during the execution of the
-script.
-
-The option --keep determines whether the output file from running
-vecscreen within the script is kept (--keep usedn) or deleted (--keep
-not used, default).
-
-Here is the example usage of compare_vector_matches_wtaxa.pl in
-sample_compare_run
-
-compare_vector_matches_wtaxa.pl \ 
---input_summary test-files/sample_input_final_step.txt \ 
---input_taxa taxonomy_tree_wlevels.txt \ 
---input_artificial_vectors artificial_whole_sequences.txt \ 
---input_artificial_segments artificial_intervals.txt \ 
---input_univec_sources biological_exclusions.txt \ 
---input_amr UniVec10_vs_amr_distinct_intervals.txt \
---input_sequences test-files/candidates.fa \
---outfile test-files/sample_output_final_step2.txt
-
 ***********
 **METHODS**
 ***********
@@ -311,74 +435,6 @@ compare_vector_matches_wtaxa.pl uses the six sets of data files listed
 to classify each vecscreen match.  This program is separate because an
 in-house usage needed somewhat different I/O specifications to fit
 into an existing software framework.
-
-**********
-**OUTPUT**
-**********
-from_vecscreen_to_summary.pl will create one line of tabular output
-per vecscreen hit in the input sequence file. There are two possible
-output formats. For both formats, columns are separated by tabs.
-
---------------------------------
-Default output format: 5 columns
---------------------------------
-By default (if --verbose is not used) then the format of those lines
-will be the following five columns:
-
-Column 1: Accession of query
-Column 2: Genus of query if known, or 1 otherwise
-Column 3: Matching vector, starting with uv|
-Column 4: One end of the alignment in the vector
-Column 5: The other end of the alignment in the vector
-
-This 5 column format was agreed on for internal NCBI usage in JIRA
-ticket SM-187.
-
-----------------------------------------------------------------
-Verbose output format (enabled with --verbose option): 11 columns
-----------------------------------------------------------------
-If --verbose is used, then each line of output will include the
-following 11 columns:
-
-Column 1:  Accession of query
-Column 2:  Genus of query if known, or 1 otherwise
-Column 3:  Species of query if known, or 1 otherwise
-Column 4:  Lower end of the alignment in the vector
-Column 5:  Upper end of the alignment in the vector
-Column 6:  Matching vector, starting with uv|
-Column 7:  One end of the alignment in the vector
-Column 8:  The other end of the alignment in the vector
-Column 9:  The strength of this vecscreen match 
-Column 10: The strength of the strongest vecscreen match for this query
-Column 11: Whether there is any dangling part (called "Suspect" by
-           vecscreen) at either end of the query
-
-A dangling part is an unmatched segment of <= 25 nucleotides.
-
-This alternative 11-column format has been shown to be useful for some
-purposes, such as correcting vector-contaminated sequences in GenBank.
-
-The version of compare_vector_matches_wtaxa.pl presented here adds
-three additional columns:
-Column 12: the classification of the match
-Column 13: Most pertinent taxid of the vector interval 
-Column 14: Lowest common ancestor of column 2 and column 13
-
-In some cases, the classification TRUE_BIOLOGICAL may be too bold and
-this can be seen because Column 14 is not much higher up the taxonomy
-tree than column 13.  When this happens, the conservation of the
-vector source needs to be propagated from genus_level_exclusions.txt
-to one of the higher-level files*:
-   superkingdom_level_exclusions.txt
-   kingdom_level_exclusions.txt
-   phylum_level_exclusions.txt
-   class_level_exclusions.txt
-   order_level_exclusions.txt
-   family_level_exclusions.txt
-   tribe_level_exclusions.txt
-
-* Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
-  these.
 
 ******************************
 **CREATING THE TAXONOMY FILE**
