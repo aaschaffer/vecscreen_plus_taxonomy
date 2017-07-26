@@ -35,6 +35,10 @@ my $output_dir          = "./test-files";
 my $output_root         = "tmp";
 my $output_dir_and_root = $output_dir . "/" . $output_root;
 
+my $output_dir2          = "./";
+my $output_root2         = "tmp";
+my $output_dir_and_root2 = $output_dir2 . "/" . $output_root2;
+
 my $errmsg = "";
 
 # check input files exist
@@ -50,23 +54,6 @@ if($errmsg ne "") {
   die "\n" . $errmsg;
 }
 printf("done.\n");
-
-###################################
-# Test from_vecscreen_to_summary.pl
-###################################
-#printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
-######################
-#my $cmd = "./from_vecscreen_to_summary.pl --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa input_dir_and_root.taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
-#run_command($cmd, 0);
-# TODO: - make from_vecscreen_to_summary.pl create and output to a directory
-#       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
-#       - update this file to test from_vecscreen_to_summary.pl
-#       - add parse_vecscreen.pl tests to this file
-#my @out_A = ("$output_dir_and_root.output_combined.txt");
-#check_many_files_exist_and_are_nonempty(\@out_A, "output");
-#diff_files("$output_dir_and_root.output_combined.txt", "$expected_dir_and_root.output_combined.txt");
-#rm_files(\@out_A);
-
 
 ###########################
 # Test combine_summaries.pl
@@ -116,7 +103,21 @@ rm_files(\@out_A);
 #####################
 printf("done.\n");
 
-
+###################################
+# Test from_vecscreen_to_summary.pl
+###################################
+printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
+######################
+my $cmd = "./from_vecscreen_to_summary.pl --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+run_command($cmd, 0);
+# TODO: - make from_vecscreen_to_summary.pl create and output to a directory
+#       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
+#       - update this file to test from_vecscreen_to_summary.pl
+#       - add parse_vecscreen.pl tests to this file
+my @out_A = ("$output_dir_and_root2.output_combined.txt");
+check_many_files_exist_and_are_nonempty(\@out_A, "output");
+diff_files("$output_dir_and_root2.output_combined.txt", "$expected_dir_and_root.output_combined.txt");
+rm_files(\@out_A);
 
 printf("# All tests passed.\n");
 printf("# SUCCESS\n");

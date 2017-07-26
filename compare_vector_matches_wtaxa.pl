@@ -505,7 +505,7 @@ sub process_taxonomy_tree {
     my $local_PARENT_COLUMN      = 1;
     my $local_FORMAL_RANK_COLUMN = 2;
     my $local_LEVEL_COLUMN       = 3;
-    my $local_BACTERIA_COLUMN       = 4;
+    my $local_BACTERIA_COLUMN    = 4;
 
     open(TAXONOMY, "<", $local_taxonomy_file) or die "Cannot open $local_taxonomy_file for input in $sub_name\n"; 
     

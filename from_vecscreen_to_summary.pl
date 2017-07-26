@@ -126,7 +126,7 @@ my $internal_wtaxonomy_output_file = $output_root . ".output_internal_wtaxonomy.
 my @arg_desc_A = (); # necessary to pass into opt_OutputPreamble()
 my @arg_A      = (); # necessary to pass into opt_OutputPreamble()
 output_banner(*STDOUT, $version, $releasedate, $synopsis, $date);
-opt_OutputPreamble(*STDERR, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
+opt_OutputPreamble(*STDOUT, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
 
 # EPN added comments here and added a subroutine run_command() to
 # excecute all system calls. That subroutine will fail if any of the system() calls
@@ -138,72 +138,72 @@ opt_OutputPreamble(*STDERR, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
 # Step 1. Call vecscreen #
 ##########################
 my $progress_w = 50; # the width of the left hand column in our progress output, hard-coded
-my $start_secs = output_progress_prior("Running vecscreen", $progress_w, undef, *STDERR);
+my $start_secs = output_progress_prior("Running vecscreen", $progress_w, undef, *STDOUT);
 run_command("$vecscreen -query $input_fasta_file -text_output > $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
 my $desc_str = sprintf("output saved as $temp_vecscreen_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
-output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 
 ##################################
 # Step 2. Parse vecscreen output #
 ##################################
-$start_secs = output_progress_prior("Parsing vecscreen output", $progress_w, undef, *STDERR);
+$start_secs = output_progress_prior("Parsing vecscreen output", $progress_w, undef, *STDOUT);
 run_command("$parse_vecscreen --input $temp_vecscreen_output_file $verbose_string --outfile_internal $internal_output_file --outfile_terminal $terminal_output_file", 0); # 0: don't echo command to STDOUT
 $desc_str = "output saved as $internal_output_file and $terminal_output_file";
-output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 
 ###############################################
 # Step 3. [OPTIONAL] Combine vecscreen output #
 ###############################################
 if ($combine_summaries_mode) {
-  $start_secs = output_progress_prior("Combining output [due to --combine_output]", $progress_w, undef, *STDERR);
+  $start_secs = output_progress_prior("Combining output [due to --combine_output]", $progress_w, undef, *STDOUT);
   run_command("$combine_summaries --input_terminal $terminal_output_file --input_internal $internal_output_file $verbose_string --outfile $combined_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $combined_output_file";
-  output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+  output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 
 ####################################
 # Step 4. Add taxonomy information #
 ####################################
 if($combine_summaries_mode) { 
-  $start_secs = output_progress_prior("Adding taxonomy information to output", $progress_w, undef, *STDERR);
+  $start_secs = output_progress_prior("Adding taxonomy information to output", $progress_w, undef, *STDOUT);
   run_command("$add_taxonomy --input_summary $combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $combined_wtaxonomy_output_file";
-  output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+  output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 else {
-  $start_secs = output_progress_prior("Adding taxonomy information to output in two stages", $progress_w, undef, *STDERR);
+  $start_secs = output_progress_prior("Adding taxonomy information to output in two stages", $progress_w, undef, *STDOUT);
   run_command("$add_taxonomy --input_summary $internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   run_command("$add_taxonomy --input_summary $terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $internal_wtaxonomy_output_file and $combined_wtaxonomy_output_file";
-  output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+  output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 
 ####################
 # Step 5. Clean up #
 ####################
 if(! $keep_mode) { 
-  $start_secs = output_progress_prior("Cleaning up temporary vecscreen output file", $progress_w, undef, *STDERR);
+  $start_secs = output_progress_prior("Cleaning up temporary vecscreen output file", $progress_w, undef, *STDOUT);
   run_command("rm -f $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "deleted $temp_vecscreen_output_file";
-  output_progress_complete($start_secs, $desc_str, undef, *STDERR);
+  output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 
 #############################
 # Step 6. Conclude and exit #
 #############################
 $total_seconds += seconds_since_epoch();
-printf STDERR ("#\n");
+printf STDOUT ("#\n");
 if($combine_summaries_mode) { 
-  printf STDERR ("# Final combined output file in %d column format saved to:\n#\t%s\n#\n", ($verbose_mode ? 11 : 5), $combined_wtaxonomy_output_file);
+  printf STDOUT ("# Final combined output file in %d column format saved to:\n#\t%s\n#\n", ($verbose_mode ? 11 : 5), $combined_wtaxonomy_output_file);
 }
 else { 
-  printf STDERR ("# Final internal match output file in %d column format saved to:\n#\t%s\n", ($verbose_mode ? 11 : 5), $internal_wtaxonomy_output_file);
-  printf STDERR ("# Final terminal match output file in %d column format saved to:\n#\t%s\n#\n", ($verbose_mode ? 11 : 5), $terminal_wtaxonomy_output_file);
+  printf STDOUT ("# Final internal match output file in %d column format saved to:\n#\t%s\n", ($verbose_mode ? 11 : 5), $internal_wtaxonomy_output_file);
+  printf STDOUT ("# Final terminal match output file in %d column format saved to:\n#\t%s\n#\n", ($verbose_mode ? 11 : 5), $terminal_wtaxonomy_output_file);
 }
-output_column_descriptions(*STDERR, $verbose_mode);
-printf STDERR ("# Total time: %.1f seconds\n", $total_seconds);
-printf STDERR ("# \n");
-printf STDERR ("# SUCCESS\n");
+output_column_descriptions(*STDOUT, $verbose_mode);
+printf STDOUT ("# Total time: %.1f seconds\n", $total_seconds);
+printf STDOUT ("# \n");
+printf STDOUT ("# SUCCESS\n");
 
 exit 0;
 

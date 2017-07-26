@@ -193,7 +193,7 @@ sub process_taxonomy_tree {
   while(defined($local_nextline = <TAXONOMY>)) {
     chomp($local_nextline);
     @local_fields_A = split /\t/, $local_nextline;
-    if(scalar(@local_fields_A) != 4) { die "ERROR in $sub_name, unexpected number of fields in $local_taxonomy_file in line: $local_nextline"; }
+    if(scalar(@local_fields_A) != 5) { die "ERROR in $sub_name, unexpected number of fields in $local_taxonomy_file in line: $local_nextline"; }
     $taxonomy_parent_H{$local_fields_A[$local_TAXID_COLUMN]} = $local_fields_A[$local_PARENT_COLUMN];
     $taxonomy_level_H{$local_fields_A[$local_TAXID_COLUMN]}  = $local_fields_A[$local_LEVEL_COLUMN];
     $taxonomy_rank_H{$local_fields_A[$local_TAXID_COLUMN]}   = $local_fields_A[$local_FORMAL_RANK_COLUMN];
