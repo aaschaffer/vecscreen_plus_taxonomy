@@ -1,9 +1,12 @@
 #!/usr/bin/perl -w
 # the first line of perl code has to be above
 #
-# Author: Alejandro Schaffer and Eric Nawrocki
+# Author: Alejandro Schaffer 
+# Documentation help and code review: Eric Nawrocki
+#
 # Code to add taxonomy information to parsed vecscreen output for 
-# vector screening
+# vector screening.
+#
 # Usage: add_taxonomy.pl --input_summary <input file> \ [REQUIRED]
 #                        --input_taxa <taxonomy_file> \ [REQUIRED] 
 #                        --outfile <output file>      \ [REQUIRED]
@@ -89,8 +92,8 @@ my $usage    = "Usage: perl add_taxonomy.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.01";
-my $releasedate   = "Jan 2017";
+my $version       = "0.02";
+my $releasedate   = "Aug 2017";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
@@ -163,21 +166,19 @@ close($output_FH);
 #           in four columns (taxon, parent taxon, rank, level).
 #
 # Args: $taxonomy_information_file: the NCBI taxonomy file
-#       $taxonomy_parent_HR:        ref to hash, key is taxon, value is parent
-#       $taxonomy_level_HR:         ref to hash, key is taxon, value is level
-
+#
 # Returns: nothing
 #
 # Dies: If file is in unexpected format: one or more lines does
-#       not have exactly 4 columns.
+#       not have exactly 5 columns.
 # 
 ##################################################################
 sub process_taxonomy_tree {
   my $sub_name = "process_taxonomy_tree()";
-  my $nargs_exp = 4;
+  my $nargs_exp = 2;
   if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
-  my ($local_taxonomy_file, $taxonomy_parent_HR, $taxonomy_level_HR, $debug_mode) = @_;
+  my ($local_taxonomy_file, $debug_mode) = @_;
 
   my $local_nextline;   # one line of taxonomy information
   my @local_fields_A;   # split of one line of taxonomy information
