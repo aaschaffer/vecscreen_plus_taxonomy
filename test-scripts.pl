@@ -108,15 +108,15 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-my $cmd = "./from_vecscreen_to_summary.pl --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+my $cmd = "./from_vecscreen_to_summary.pl --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 # TODO: - make from_vecscreen_to_summary.pl create and output to a directory
 #       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
 #       - update this file to test from_vecscreen_to_summary.pl
 #       - add parse_vecscreen.pl tests to this file
-my @out_A = ("$output_dir_and_root2.output_combined.txt");
+my @out_A = ("$output_dir_and_root2.output_combined_wtaxonomy.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
-diff_files("$output_dir_and_root2.output_combined.txt", "$expected_dir_and_root.output_combined.txt");
+diff_files("$output_dir_and_root2.output_combined_wtaxonomy.txt", "$expected_dir_and_root.output_combined_wtaxonomy.txt");
 rm_files(\@out_A);
 
 printf("# All tests passed.\n");

@@ -508,7 +508,11 @@ close (OUTPUT);
 # Synopsis: Reads a file that includes NCBI's taxonomy information 
 #           in four columns (taxon, parent taxon, rank, level).
 #
+# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO ONE OF THE 
+# SAME NAME IN assign_levels_to_taxonomy.pl AND add_taxonomy.pl.
+#
 # Args: $taxonomy_information_file: the NCBI taxonomy file
+#       $debug_mode:                '1' if --debug was used, else '0'
 #
 # Returns: nothing
 #
@@ -523,7 +527,7 @@ sub process_taxonomy_tree {
     if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
     my ($local_taxonomy_file, $debug_mode) = @_;
-#HERE HERE HERE 
+
     my $local_nextline; #one line of taxonomy information
     my @local_fields;   #split of one line of taxonomy information
     my $local_TAXID_COLUMN       = 0;
@@ -542,419 +546,484 @@ sub process_taxonomy_tree {
 	$taxonomy_level{$local_fields[$local_TAXID_COLUMN]}  = $local_fields[$local_LEVEL_COLUMN];
 	$belongs_in_bacteria{$local_fields[$local_TAXID_COLUMN]}  = $local_fields[$local_BACTERIA_COLUMN];
 	if ($debug_mode && ($genus_to_test == $local_fields[0])) {
-	    print "Testing taxon $genus_to_test\n"; 
+          print "Testing taxon $genus_to_test\n"; 
 	}
         $rank_hash{$local_fields[$local_TAXID_COLUMN]} = $local_fields[$local_FORMAL_RANK_COLUMN];
     }
     close(TAXONOMY);
 }
 
+################################################
 # Subroutine: process_candidate_sequences()
-# Synopsis: reads a file that contains a list of input sequences in FASTA and stores the deflines in a hash
 #
-# Args: $candidate_sequences_file
+# Synopsis: Reads a file that contains a list of input sequences in FASTA
+#           and stores the deflines in a hash.
+#
+# Args: $candidate_sequences_file: the FASTA sequence file
 #
 # Returns: nothing
-
+#
+# Dies: Never.
+# 
+##################################################################
 sub process_candidate_sequences {
+  my $sub_name = "process_candidate_sequences()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
-    my $sub_name = "process_candidate_sequences()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  my ($local_sequences_file) = @_;
+  my $local_nextline; #one line with one vector
+  my $local_accession;
 
-    my ($local_sequences_file) = @_;
-    my $local_nextline; #one line with one vector
-    my $local_accession;
-
-    open(SEQUENCES, "<", $local_sequences_file) or die "Cannot open $local_sequences_file for input in $sub_name\n"; 
+  open(SEQUENCES, "<", $local_sequences_file) or die "Cannot open $local_sequences_file for input in $sub_name\n"; 
     
-    while(defined($local_nextline = <SEQUENCES>)) {
-	chomp($local_nextline);
-	if ($local_nextline =~m/^>/) {
-	    ($local_accession) = ($local_nextline =~m/^>(\S+)/);
-	    $deflines{$local_accession} = $local_nextline;
-	}
+  while(defined($local_nextline = <SEQUENCES>)) {
+    chomp($local_nextline);
+    if ($local_nextline =~m/^>/) {
+      ($local_accession) = ($local_nextline =~m/^>(\S+)/);
+      $deflines{$local_accession} = $local_nextline;
     }
-    close(SEQUENCES);
+  }
+  close(SEQUENCES);
+
+  return;
 }
 
+################################################
 # Subroutine: process_microsat_vectors()
-# Synopsis: reads a file that contains a list of vectors that contain a microsatellite and stores them in a hash
 #
-# Args: $microsat_vector_file
+# Synopsis: Reads a file that contains a list of vectors 
+#           that contain a microsatellite and stores them 
+#           in a hash.
+#
+# Args: $microsat_vector_file: file with list of vectors with microsatellites
 #
 # Returns: nothing
-
+##################################################################
 sub process_microsat_vectors {
 
-    my $sub_name = "process_microsat_vectors()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  my $sub_name = "process_microsat_vectors()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
-    my ($local_vector_file) = @_;
-    my $local_nextline; #one line with one vector
+  my ($local_vector_file) = @_;
+  my $local_nextline; #one line with one vector
+  
+  open(VECTORS, "<", $local_vector_file) or die "Cannot open $local_vector_file for input in $sub_name\n"; 
+  
+  while(defined($local_nextline = <VECTORS>)) {
+    chomp($local_nextline);
+    $microsat_containing_vectors{$local_nextline} = 1;
+  }
+  close(VECTORS);
 
-    open(VECTORS, "<", $local_vector_file) or die "Cannot open $local_vector_file for input in $sub_name\n"; 
-    
-    while(defined($local_nextline = <VECTORS>)) {
-	chomp($local_nextline);
-	$microsat_containing_vectors{$local_nextline} = 1;
-    }
-    close(VECTORS);
+  return;
 }
 
+################################################
 # Subroutine: process_artificial_vectors()
-# Synopsis: reads a file that contains a list of artificial vectors and stores them in a hash
 #
-# Args: $artificial_vector_file
+# Synopsis: Reads a file that contains a list of artificial
+#           vectors and stores them in a hash.
+#
+# Args: $artificial_vector_file: file with list of artificial vectors
 #
 # Returns: nothing
-
+##################################################################
 sub process_artificial_vectors {
 
-    my $sub_name = "process_artificial_vectors()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_vector_file) = @_;
-    my $local_nextline; #one line with one vector
-
-    open(VECTORS, "<", $local_vector_file) or die "Cannot open $local_vector_file for input in $sub_name\n"; 
-    
-    while(defined($local_nextline = <VECTORS>)) {
-	chomp($local_nextline);
-	$artificial_whole_vectors{$local_nextline} = 1;
-    }
-    close(VECTORS);
+  my $sub_name = "process_artificial_vectors()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_vector_file) = @_;
+  my $local_nextline; #one line with one vector
+  
+  open(VECTORS, "<", $local_vector_file) or die "Cannot open $local_vector_file for input in $sub_name\n"; 
+  
+  while(defined($local_nextline = <VECTORS>)) {
+    chomp($local_nextline);
+    $artificial_whole_vectors{$local_nextline} = 1;
+  }
+  close(VECTORS);
 }
 
+################################################
 # Subroutine: process_artificial_segments()
-# Synopsis: reads a file that contains UniVec segments (but not whole vectors) that are artificial
-#           The file should be sorted by the first column, if not we will detect it and die.
 #
-# Args: $artificial_segment_file
-#       
+# Synopsis: Reads a file that contains UniVec segments
+#           (but not whole vectors) that are artificial.
+#           The file should be sorted by the first column, 
+#           if not we will detect it and die.
+#
+# Args: $artificial_segment_file: file with list of artificial vectors
+#
 # Returns: nothing
-
+#
+# Dies: If file is not sorted by first column
+##################################################################
 sub process_artificial_segments {
 
-    my $sub_name = "process_artificial_segments()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_artificial_segment_file) = @_;
-    my $local_nextline; #one line of genome match
+  my $sub_name = "process_artificial_segments()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_artificial_segment_file) = @_;
+  my $local_nextline; #one line of genome match
     my @local_fields; #split of one line of genome match information
-    my $local_line_index = 0; #index for entries in file
-    my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
-                                   # used to make sure the file is sorted appropriately (by first column)
-
-    open(SEGMENTS, "<", $local_artificial_segment_file) or die "Cannot open $local_artificial_segment_file for input in $sub_name\n"; 
-    
-    while(defined($local_nextline = <SEGMENTS>)) {
-	chomp($local_nextline);
-	@local_fields = split /\t/, $local_nextline;
-        # We take advantage of fact that file is sorted by first column. If it is not,
-        # we will detect it and die.
-	if ($ARTIFICIAL_TAXON == $local_fields[$SOURCE_TAXON_COLUMN]) {
-            # EPN  added code here to check that file is sorted appropriately and die if not
-            #              added code here to check if start <= end and die if not
-            # is this a new source vector? 
-            if((defined $prv_source_vector) && ($prv_source_vector ne $local_fields[$SOURCE_VECTOR_COLUMN])) { 
-                # yes it is new, $artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
-                # or else the file wasn't sorted by the first column as we expected it to be
-                if(defined($artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
-                    die "ERROR in $sub_name, $local_artificial_segment_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
-                }
-            }
-            if($local_fields[$SOURCE_START_COLUMN] > $local_fields[$SOURCE_END_COLUMN]) { 
-              die "ERROR in $sub_name, $local_artificial_segment_file includes line with start > end:\n$local_nextline\n";
-            }
-	    $artificial_segment_univec[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
-	    $artificial_segment_start[$local_line_index]  = $local_fields[$SOURCE_START_COLUMN];
-	    $artificial_segment_end[$local_line_index]    = $local_fields[$SOURCE_END_COLUMN];
-	    if (!defined($artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
-		$artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
-	    }
-	    $artificial_last_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
-            $prv_source_vector = ($local_fields[$SOURCE_VECTOR_COLUMN]);
-	}
-	$local_line_index++;
+  my $local_line_index = 0; #index for entries in file
+  my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
+  # used to make sure the file is sorted appropriately (by first column)
+  
+  open(SEGMENTS, "<", $local_artificial_segment_file) or die "Cannot open $local_artificial_segment_file for input in $sub_name\n"; 
+  
+  while(defined($local_nextline = <SEGMENTS>)) {
+    chomp($local_nextline);
+    @local_fields = split /\t/, $local_nextline;
+    # We take advantage of fact that file is sorted by first column. If it is not,
+    # we will detect it and die.
+    if ($ARTIFICIAL_TAXON == $local_fields[$SOURCE_TAXON_COLUMN]) {
+      # is this a new source vector? 
+      if((defined $prv_source_vector) && ($prv_source_vector ne $local_fields[$SOURCE_VECTOR_COLUMN])) { 
+        # yes it is new, $artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
+        # or else the file wasn't sorted by the first column as we expected it to be
+        if(defined($artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
+          die "ERROR in $sub_name, $local_artificial_segment_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
+        }
+      }
+      if($local_fields[$SOURCE_START_COLUMN] > $local_fields[$SOURCE_END_COLUMN]) { 
+        die "ERROR in $sub_name, $local_artificial_segment_file includes line with start > end:\n$local_nextline\n";
+      }
+      $artificial_segment_univec[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
+      $artificial_segment_start[$local_line_index]  = $local_fields[$SOURCE_START_COLUMN];
+      $artificial_segment_end[$local_line_index]    = $local_fields[$SOURCE_END_COLUMN];
+      if (!defined($artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
+        $artificial_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+      }
+      $artificial_last_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+      $prv_source_vector = ($local_fields[$SOURCE_VECTOR_COLUMN]);
     }
-    close(SEGMENTS);
+    $local_line_index++;
+  }
+  close(SEGMENTS);
+
+  return;
 }
 
+################################################
 # Subroutine: process_amr_segments()
-# Synopsis: reads a file that contains UniVec segments (but not whole vectors) that confer anti-microbial resistance.
-#           The file should be sorted by the first column, if not we will detect it and die.
 #
-# Args: $amr_segment_file
+# Synopsis: Reads a file that contains UniVec segments 
+#           (but not whole vectors) that confer anti-microbial 
+#           resistance. The file should be sorted by the first 
+#           column, if not we will detect it and die.
+#
+# Args: $amr_segment_file: file with list of amr segments
 #       
 # Returns: nothing
-
+#
+# Dies: If file is not sorted by first column
+################################################
 sub process_amr_segments {
+  my $sub_name = "process_amr_segments()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
-    my $sub_name = "process_amr_segments()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  my ($local_amr_segment_file) = @_;
+  my $local_nextline; #one line of genome match
+  my @local_fields; #split of one line of genome match information
+  my $local_line_index = 0; #index for entries in file
+  my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
+                                 # used to make sure the file is sorted appropriately (by first column)
 
-    my ($local_amr_segment_file) = @_;
-    my $local_nextline; #one line of genome match
-    my @local_fields; #split of one line of genome match information
-    my $local_line_index = 0; #index for entries in file
-    my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
-                                   # used to make sure the file is sorted appropriately (by first column)
-
-    open(SEGMENTS, "<", $local_amr_segment_file) or die "Cannot open $local_amr_segment_file for input in $sub_name\n"; 
+  open(SEGMENTS, "<", $local_amr_segment_file) or die "Cannot open $local_amr_segment_file for input in $sub_name\n"; 
     
-    while(defined($local_nextline = <SEGMENTS>)) {
-	chomp($local_nextline);
-	@local_fields = split /\t/, $local_nextline;
+  while(defined($local_nextline = <SEGMENTS>)) {
+    chomp($local_nextline);
+    @local_fields = split /\t/, $local_nextline;
+    # We take advantage of fact that file is sorted by first column. If it is not,
+    # we will detect it and die.
+    # is this a new source vector? 
+    if((defined $prv_source_vector) && ($prv_source_vector ne $local_fields[$SOURCE_VECTOR_COLUMN])) { 
+      # yes it is new, $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
+      # or else the file wasn't sorted by the first column as we expected it to be
+      if(defined($amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
+        die "ERROR in $sub_name, $local_amr_segment_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
+      }
+    }
+    if($local_fields[$SOURCE_START_COLUMN] > $local_fields[$SOURCE_END_COLUMN]) { 
+      die "ERROR in $sub_name, $local_amr_segment_file includes line with start > end:\n$local_nextline\n";
+    }
+    $amr_segment_univec[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
+    $amr_segment_start[$local_line_index]   = $local_fields[$SOURCE_START_COLUMN];
+    $amr_segment_end[$local_line_index]     = $local_fields[$SOURCE_END_COLUMN];
+    if (!defined($amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
+      $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+    }
+    $amr_last_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+    $prv_source_vector = ($local_fields[$SOURCE_VECTOR_COLUMN]);
+    $local_line_index++;
+  }
+  close(SEGMENTS);
+}
+
+################################################
+# Subroutine: process_genome_match_info()
+#
+# Synopsis: Reads a file that contains a list of files
+#           (one per taxonomic rank) such that each file
+#           contains information on matches between UniVec
+#           sequences and genomes. In the top level file, 
+#           there are two values on each row, the file name
+#           and the taxonomic rank. There is expected to be 
+#           at most one file per rank (we die if there are 
+#           more than one file per rank). 
+#           
+#           For each file name read, we open the file and
+#           parse it. 
+#
+# Args: $genome_match_file: file with list of match files
+#       $debug_mode:        '1' if --debug used, else '0'
+# 
+# Returns: nothing
+#
+# Dies: If multiple files exist for the same rank, or if 
+#       any of the match files are not sorted by the first
+#       column.
+##################################################################
+sub process_genome_match_info {
+  my $sub_name = "process_genome_match_info()";
+  my $nargs_exp = 2;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_genome_match_file, $debug_mode) = @_;
+  my $local_file_line; #one line with a file name and a rank
+  my %local_ranks_seen; #taxonomic ranks seen
+  my $local_one_rank_file; #file of matches for one taxonomic rank
+  my $local_rank; #the rank for this file;
+  my $local_nextline; #one line of genome match
+  my @local_file_fields; #split of line in the upper level file
+  my @local_fields; #split of one line of genome match information
+  my $local_line_index = 0; #index for entries in file
+  my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
+                                 # used to make sure the file is sorted appropriately (by first column)
+  my %read_rank = ();    # hash, key: rank $r, value is set to 1 once we open a file for rank $r
+  # used only to make sure we don't read two files for a single rank
+  # if we do, we die in error
+  
+  open(FILES_BY_RANK, "<", $local_genome_match_file) or die "Cannot open $local_genome_match_file for input in $sub_name\n"; 
+  while(defined($local_file_line = <FILES_BY_RANK>)) {
+    chomp($local_file_line);
+    if ($debug_mode) {
+      printf "Reading file with rank: $local_file_line\n";
+    }
+    @local_file_fields = split /\t/, $local_file_line;
+    $local_one_rank_file = $local_file_fields[0];
+    if ($debug_mode) {
+      printf "Reading file: $local_one_rank_file\n";
+    }
+    $local_rank = $local_file_fields[1];
+    if ($debug_mode) {
+      printf "Working on rank $local_rank\n";
+    }
+    if (recognize_rank($local_rank)) {
+      open(GENOME, "<", $local_one_rank_file) or die "Cannot open $local_one_rank_file in $sub_name\n"; 
+      if((defined $read_rank{$local_rank}) && ($read_rank{$local_rank} == 1)) { 
+        die "ERROR in $sub_name, tried to read multiple files for rank $local_rank in file $local_genome_match_file, should only be one file per rank";
+      }
+      $read_rank{$local_rank} = 1;
+      $prv_source_vector = undef;
+      $local_line_index = 0;
+      while(defined($local_nextline = <GENOME>)) {
+        chomp($local_nextline);
+        @local_fields = split /\t/, $local_nextline;
         # We take advantage of fact that file is sorted by first column. If it is not,
         # we will detect it and die.
-        # EPN  added code here to check that file is sorted appropriately and die if not
-        #              added code here to check if start <= end and die if not
         # is this a new source vector? 
         if((defined $prv_source_vector) && ($prv_source_vector ne $local_fields[$SOURCE_VECTOR_COLUMN])) { 
-            # yes it is new, $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
-            # or else the file wasn't sorted by the first column as we expected it to be
-            if(defined($amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
-                      die "ERROR in $sub_name, $local_amr_segment_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
-            }
+          # yes it is new, $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
+          # or else the file wasn't sorted by the first column as we expected it to be
+          if(defined($biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
+            die "ERROR in $sub_name, $local_one_rank_file read from $local_genome_match_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
+          }
         }
         if($local_fields[$SOURCE_START_COLUMN] > $local_fields[$SOURCE_END_COLUMN]) { 
-          die "ERROR in $sub_name, $local_amr_segment_file includes line with start > end:\n$local_nextline\n";
+          die "ERROR in $sub_name, $local_one_rank_file read from $local_genome_match_file includes line with start > end:\n$local_nextline\n";
         }
-	$amr_segment_univec[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
-	$amr_segment_start[$local_line_index]   = $local_fields[$SOURCE_START_COLUMN];
-	$amr_segment_end[$local_line_index]     = $local_fields[$SOURCE_END_COLUMN];
-	if (!defined($amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
-	    $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
-	}
-	$amr_last_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+        $genome_match_univec{$local_rank}[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
+        $genome_match_start{$local_rank}[$local_line_index]  = $local_fields[$SOURCE_START_COLUMN];
+        $genome_match_end{$local_rank}[$local_line_index]    = $local_fields[$SOURCE_END_COLUMN];
+        $genome_match_taxon{$local_rank}[$local_line_index]  = $local_fields[$SOURCE_TAXON_COLUMN];
+        if ($debug_mode) {
+          if ($vector_to_test eq $local_fields[$SOURCE_VECTOR_COLUMN]) {
+            print "$local_nextline\n";
+          }
+        }
+        if (!defined($biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
+          $biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
+        }
+        $biological_last_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
         $prv_source_vector = ($local_fields[$SOURCE_VECTOR_COLUMN]);
-	$local_line_index++;
+        $local_line_index++;
+      }
+      close(GENOME);
     }
-    close(SEGMENTS);
+    else {
+      printf STDERR "Warning: The rank $local_rank is not recognized\n";
+    }
+  }
+  close(FILES_BY_RANK);
+
+  return;
 }
 
-# Subroutine: process_genome_match_info()
-# Synopsis: reads a file that contains a list of files (one per taxonomic rank) 
-#           such that each file contains information on matches between UniVec sequences and genomes.
-#           In the top level file, there are two values on each row, the file name and the taxonomic rank.
-#           There is expected to be at most one file per rank.
-#           
-# Args: $genome_match_file
-#       
-# Returns: nothing
-
-sub process_genome_match_info {
-
-    my $sub_name = "process_genome_match_info()";
-    my $nargs_exp = 2;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_genome_match_file, $debug_mode) = @_;
-    my $local_file_line; #one line with a file name and a rank
-    my %local_ranks_seen; #taxonomic ranks seen
-    my $local_one_rank_file; #file of matches for one taxonomic rank
-    my $local_rank; #the rank for this file;
-    my $local_nextline; #one line of genome match
-    my @local_file_fields; #split of line in the upper level file
-    my @local_fields; #split of one line of genome match information
-    my $local_line_index = 0; #index for entries in file
-    my $prv_source_vector = undef; # source vector ($local_fields[$SOURCE_VECTOR_COLUMN]) of previous line
-                                   # used to make sure the file is sorted appropriately (by first column)
-    my %read_rank = ();    # hash, key: rank $r, value is set to 1 once we open a file for rank $r
-                           # used only to make sure we don't read two files for a single rank
-                           # if we do, we die in error
-
-    open(FILES_BY_RANK, "<", $local_genome_match_file) or die "Cannot open $local_genome_match_file for input in $sub_name\n"; 
-    while(defined($local_file_line = <FILES_BY_RANK>)) {
-	chomp($local_file_line);
-	if ($debug_mode) {
-	    printf "Reading file with rank: $local_file_line\n";
-	}
-	@local_file_fields = split /\t/, $local_file_line;
-	$local_one_rank_file = $local_file_fields[0];
-	if ($debug_mode) {
-	    printf "Reading file: $local_one_rank_file\n";
-	}
-        $local_rank = $local_file_fields[1];
-	if ($debug_mode) {
-	    printf "Working on rank $local_rank\n";
-	}
-	if (recognize_rank($local_rank)) {
-	    open(GENOME, "<", $local_one_rank_file) or die "Cannot open $local_one_rank_file in $sub_name\n"; 
-            # EPN added this block to check that multiple files are not read for same rank, we die if
-            #              we do
-            if((defined $read_rank{$local_rank}) && ($read_rank{$local_rank} == 1)) { 
-              die "ERROR in $sub_name, tried to read multiple files for rank $local_rank in file $local_genome_match_file, should only be one file per rank";
-            }
-            $read_rank{$local_rank} = 1;
-            $prv_source_vector = undef;
-	    $local_line_index = 0;
-	    while(defined($local_nextline = <GENOME>)) {
-		chomp($local_nextline);
-		@local_fields = split /\t/, $local_nextline;
-                # We take advantage of fact that file is sorted by first column. If it is not,
-                # we will detect it and die.
-                # EPN added code here to check that file is sorted appropriately and die if not
-                #              added code here to check if start <= end and die if not
-                # is this a new source vector? 
-                if((defined $prv_source_vector) && ($prv_source_vector ne $local_fields[$SOURCE_VECTOR_COLUMN])) { 
-                    # yes it is new, $amr_first_match_index{$local_fields[$SOURCE_VECTOR_COLUMN]} should be undef
-                    # or else the file wasn't sorted by the first column as we expected it to be
-                    if(defined($biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]})) { 
-                        die "ERROR in $sub_name, $local_one_rank_file read from $local_genome_match_file not properly sorted by first column, we saw $local_fields[$SOURCE_VECTOR_COLUMN] as the first token in two non-contiguous groups of >= 1 line"; 
-                    }
-                }
-                if($local_fields[$SOURCE_START_COLUMN] > $local_fields[$SOURCE_END_COLUMN]) { 
-                  die "ERROR in $sub_name, $local_one_rank_file read from $local_genome_match_file includes line with start > end:\n$local_nextline\n";
-                }
-		$genome_match_univec{$local_rank}[$local_line_index] = $local_fields[$SOURCE_VECTOR_COLUMN];
-		$genome_match_start{$local_rank}[$local_line_index]  = $local_fields[$SOURCE_START_COLUMN];
-		$genome_match_end{$local_rank}[$local_line_index]    = $local_fields[$SOURCE_END_COLUMN];
-		$genome_match_taxon{$local_rank}[$local_line_index]  = $local_fields[$SOURCE_TAXON_COLUMN];
-		if ($debug_mode) {
-		    if ($vector_to_test eq $local_fields[$SOURCE_VECTOR_COLUMN]) {
-			print "$local_nextline\n";
-		    }
-		}
-		if (!defined($biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]})) {
-		    $biological_first_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
-		}
-		$biological_last_match_index{$local_rank}{$local_fields[$SOURCE_VECTOR_COLUMN]} = $local_line_index;
-                $prv_source_vector = ($local_fields[$SOURCE_VECTOR_COLUMN]);
-		$local_line_index++;
-	    }
-	    close(GENOME);
-	}
-	else {
-	    printf STDERR "Warning: The rank $local_rank is not recognized\n";
-	}
-    }
-    close(FILES_BY_RANK);
-}
-
+################################################
 # Subroutine: recognize_rank()
-# Synopsis: takes a candidate rank as its only argument;
-#           returns 1 if the rank is recognized and 0 otherwise.
 #
-# Args: $rank
+# Synopsis: Given a candidate rank, returns '1' if the
+#           rank is recognized and '0' if not.
 #
-# Returns: 1 if the rank is recognized and 0 otherwise
-
+# Args: $candidate_rank: the candidate rank
+#       
+# Returns: '1' if $candidate_rank is recognized, else '0'
+#
+################################################
 sub recognize_rank {
-
-    my $sub_name = "recognize_rank()";
-    my $nargs_exp = 1;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_rank) = @_;
-    my $local_r;
-    
-    for($local_r = 0; $local_r < $num_taxonomy_ranks; $local_r++) {
-	if ($local_rank eq $taxonomy_ranks[$local_r]) { 
-	    return 1;
-	}
+  my $sub_name = "recognize_rank()";
+  my $nargs_exp = 1;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_rank) = @_;
+  my $local_r;
+  
+  for($local_r = 0; $local_r < $num_taxonomy_ranks; $local_r++) {
+    if ($local_rank eq $taxonomy_ranks[$local_r]) { 
+      return 1;
     }
-    return 0;
+  }
+  return 0;
 }
 
+################################################
 # Subroutine: find_overlap()
-# Synopsis: find the amount of overlap between two intervals, specified by four endpoints.
 #
-# Args: $local_left_end1, $local_right_end1, $local_left_end2, $local_right_end2
+# Synopsis: Find the amount of overlap between 
+#           two intervals, specified by four
+#           endpoints.
 #
-# Returns: amount of overlap
-
+# Args: $left_end1:  left endpoint 1
+#       $right_end1: right endpoint 1
+#       $left_end2:  left endpoint 2
+#       $right_end2: right endpoint 2
+#       
+# Returns: amount of overlap, '0' if none
+#
+# Dies: if either $left_end1 > $right_end1 or 
+#                 $left_end2 > $right_end2
+#
+################################################
 sub find_overlap {
-    my $sub_name = "find_overlap()";
-    my $nargs_exp = 4;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  my $sub_name = "find_overlap()";
+  my $nargs_exp = 4;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_left_end1, $local_right_end1, $local_left_end2, $local_right_end2) = @_;
 
-    my ($local_left_end1, $local_right_end1, $local_left_end2, $local_right_end2) = @_;
+  if($local_left_end1 > $local_right_end1) { die "ERROR in $sub_name, left end 1 > right end 1 ($local_left_end1 > $local_right_end1)"; }
+  if($local_left_end2 > $local_right_end2) { die "ERROR in $sub_name, left end 2 > right end 2 ($local_left_end2 > $local_right_end2)"; }
 
-    my $local_overlap_amount;  #amount of overlap between the two intervals
-    my $local_intersect_left;  #the left endpoint that is further to the right
-    my $local_intersect_right; #the right endpoint that is further to the left
-
-    if ($local_right_end1 < $local_left_end2) {
-        return 0;
-    }
-    if ($local_right_end2 < $local_left_end1) {
-        return 0;
-    }
-    if ($local_left_end1 <= $local_left_end2) {
-        $local_intersect_left = $local_left_end2;
-    }
-    else {
-        $local_intersect_left = $local_left_end1;
-    }
-    if ($local_right_end1 <= $local_right_end2) {
-        $local_intersect_right = $local_right_end1;
-    }
-    else {
-        $local_intersect_right = $local_right_end2;
-    }
-    $local_overlap_amount = $local_intersect_right - $local_intersect_left + 1;
-    return $local_overlap_amount;
+  my $local_overlap_amount;  #amount of overlap between the two intervals
+  my $local_intersect_left;  #the left endpoint that is further to the right
+  my $local_intersect_right; #the right endpoint that is further to the left
+  
+  if ($local_right_end1 < $local_left_end2) {
+    return 0;
+  }
+  if ($local_right_end2 < $local_left_end1) {
+    return 0;
+  }
+  if ($local_left_end1 <= $local_left_end2) {
+    $local_intersect_left = $local_left_end2;
+  }
+  else {
+    $local_intersect_left = $local_left_end1;
+  }
+  if ($local_right_end1 <= $local_right_end2) {
+    $local_intersect_right = $local_right_end1;
+  }
+  else {
+    $local_intersect_right = $local_right_end2;
+  }
+  $local_overlap_amount = $local_intersect_right - $local_intersect_left + 1;
+  return $local_overlap_amount;
 }
 
+################################################
 # Subroutine: find_ancestor()
-# Synopsis: given a taxon, returns its ancestor that is at a specific rank such as "genus";
-#           it returns 1 (for root) if there is no ancestor at the specified target rank
 #
-# Args: $local_taxon
-#       $local_target_rank
+# Synopsis: Given a taxon, returns its ancestor that is at a 
+#           specific rank such as "genus"; it returns 1 (for root) 
+#           if there is no ancestor at the specified target rank
 #
-# Returns: the ancestor taxon that is at the specified rank or 1 (for root)
-
+# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO ONE OF THE SAME
+# NAME IN add_taxonomy.pl.
+#
+# Args: $local_taxon:       the taxon
+#       $local_target_rank: the rank we're interested in
+#       
+# Returns: the ancestor taxon that is at the specified rank 
+#          or 1 (for root)
+#
+# Dies: if $taxonomy_parent{$local_taxon} is undefined
+#
+################################################
 sub find_ancestor {
+  my $sub_name = "find_ancestor()";
+  my $nargs_exp = 2;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
 
-    my $sub_name = "find_ancestor()";
-    my $nargs_exp = 2;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  my ($local_taxon, $local_target_rank) = @_;
+  my $local_ancestor; #one line of taxonomy information
 
-    my ($local_taxon, $local_target_rank) = @_;
-    my $local_ancestor; #one line of taxonomy information
-
-    if (!defined($taxonomy_parent{$local_taxon})) {
-        print STDERR "Taxid $local_taxon is not in the taxonomy tree, the tree likely needs to be updated\n";
-	exit;
-    }
-    $local_ancestor = $local_taxon;
-    while ((1 != $local_ancestor) && ((!(defined($rank_hash{$local_ancestor}))) || (!($rank_hash{$local_ancestor} eq $local_target_rank)))) {
-        $local_ancestor = $taxonomy_parent{$local_ancestor};
-    }            
-    return($local_ancestor);
+  if (!defined($taxonomy_parent{$local_taxon})) {
+    print STDERR "Taxid $local_taxon is not in the taxonomy tree, the tree likely needs to be updated\n";
+    exit;
+  }
+  $local_ancestor = $local_taxon;
+  while ((1 != $local_ancestor) && ((!(defined($rank_hash{$local_ancestor}))) || (!($rank_hash{$local_ancestor} eq $local_target_rank)))) {
+    $local_ancestor = $taxonomy_parent{$local_ancestor};
+  }            
+  return($local_ancestor);
 }        
 
-# Subroutine: find_lca ()
-# Synopsis: finds the lowest common ancestor of two integer taxids.
+################################################
+# Subroutine: find_lca()
 #
-# Args: $local_taxid1, $local_taxid2
+# Synopsis: Finds the lowest common ancestor of two integer taxids.
 #
-# Returns: lowest common ancestor of the two taxids
-
+# Args: $local_taxid1:  taxon 1
+#       $local_taxid2:  taxon 2
+#       
+# Returns: Lowest common ancestor of the two taxids.
+#
+################################################
 sub find_lca {
-    my $sub_name = "find_lca()";
-    my $nargs_exp = 2;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_taxid1, $local_taxid2) = @_;
-    my $local_ancestor1 = $local_taxid1;    #ancestor of local_taxid1
-    my $local_ancestor2 = $local_taxid2;
-    while ($taxonomy_level{$local_ancestor1} < $taxonomy_level{$local_ancestor2}) {
-	$local_ancestor2 = $taxonomy_parent{$local_ancestor2};
-    }
-    while ($taxonomy_level{$local_ancestor1} > $taxonomy_level{$local_ancestor2}) {
-	$local_ancestor1 = $taxonomy_parent{$local_ancestor1};
-    }
-    while ($local_ancestor1 != $local_ancestor2) {
-	$local_ancestor1 = $taxonomy_parent{$local_ancestor1};
-	$local_ancestor2 = $taxonomy_parent{$local_ancestor2};
-    }
-    return($local_ancestor1);
+  my $sub_name = "find_lca()";
+  my $nargs_exp = 2;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_taxid1, $local_taxid2) = @_;
+  my $local_ancestor1 = $local_taxid1;    #ancestor of local_taxid1
+  my $local_ancestor2 = $local_taxid2;
+  while ($taxonomy_level{$local_ancestor1} < $taxonomy_level{$local_ancestor2}) {
+    $local_ancestor2 = $taxonomy_parent{$local_ancestor2};
+  }
+  while ($taxonomy_level{$local_ancestor1} > $taxonomy_level{$local_ancestor2}) {
+    $local_ancestor1 = $taxonomy_parent{$local_ancestor1};
+  }
+  while ($local_ancestor1 != $local_ancestor2) {
+    $local_ancestor1 = $taxonomy_parent{$local_ancestor1};
+    $local_ancestor2 = $taxonomy_parent{$local_ancestor2};
+  }
+  return($local_ancestor1);
 }

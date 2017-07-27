@@ -119,8 +119,8 @@ close(OUTPUT);
 # Synopsis: Reads a file that includes NCBI's taxonomy information 
 #           in four columns (taxon, parent taxon, rank, level).
 #
-# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO THE SUBROUTINE
-# OF THE SAME NAME IN add_taxonomy.pl AND compare_vector_matches_wtaxa.pl
+# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO ONE OF THE 
+# SAME NAME IN add_taxonomy.pl AND compare_vector_matches_wtaxa.pl
 #
 # Args: $taxonomy_information_file: the NCBI taxonomy file
 #
