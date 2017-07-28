@@ -43,6 +43,17 @@ use Getopt::Long;
 
 require "epn-options.pm";
 
+# make sure the VECPLUSDIR environment variable is set
+my $vecplusdir = $ENV{'VECPLUSDIR'};
+if(! exists($ENV{'VECPLUSDIR'})) { 
+  printf STDERR ("\nERROR, the environment variable VECPLUSDIR is not set, please set it to the directory that was created when you unpackaged the vecscreen_plus_taxonomy package.\n"); 
+  exit(1); 
+}
+if(! (-d $vecplusdir)) { 
+  printf STDERR ("\nERROR, the vecscreen_plus_taxonomy directory specified by your environment variable VECPLUSDIR does not exist.\n"); 
+  exit(1); 
+}    
+
 # input/output file names
 my $input_summary_file;        # input file that summarizes vecscreen matches 
 my $input_taxa_file;           # input file with taxonomy in a tab-delimited four-column format 
@@ -56,7 +67,9 @@ my $output_file;               # output summary file with three columns added sh
                                # b) taxid of the vector interval if known, and c) lowest common ancestor of the query 
                                # and the subject interval, if applicable or 1 otherwise
 my $debug_mode;                # '1' if --debug enabled, in which case we output debugging print statements
-my $microsat_file = "Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
+#my $microsat_file = $vecplusdir . "/info-files/Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
+my $microsat_file = $vecplusdir . "Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
+if(! -e $microsat_file) { die "ERROR, required file $microsat_file defined as \$VECPLUSDIR/info-files/Microsatellite_vectors.txt does not exist"; }
 
 # variables used in processing input
 my $nextline;  #one line of the input summary file
@@ -240,33 +253,6 @@ if($GetOptions_H{"-h"}) {
 if(($reqopts_errmsg ne "") || (! $all_options_recognized)) { 
   if   ($reqopts_errmsg ne "") { die $reqopts_errmsg; }
   else                         { die "ERROR, unrecognized option;"; }
-}
-
-# print help and exit if necessary
-if((! $options_okay) || ($GetOptions_H{"-h"})) {
-  opt_OutputHelp(*STDOUT, $synopsis . $usage, \%opt_HH, \@opt_order_A, \%opt_group_desc_H);
-  if(! $options_okay) { die "ERROR, unrecognized option;"; }
-  else                { exit 0; } # -h, exit with 0 status
-}
-
-# set options in %opt_HH
-opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
-
-# validate options (check for conflicts)
-opt_ValidateSet(\%opt_HH, \@opt_order_A);
-
-# die if any of the required options were not used
-my $errmsg = undef;
-if(! defined $input_summary_file)        { $errmsg .= "ERROR, --input_summary option not used.\n"; }
-if(! defined $input_taxa_file)           { $errmsg .= "ERROR, --input_taxa option not used.\n"; }
-if(! defined $input_artificial_vectors)  { $errmsg .= "ERROR, --input_artificial_vectors option not used.\n"; }
-if(! defined $input_artificial_segments) { $errmsg .= "ERROR, --input_artificial_segments option not used.\n"; }
-if(! defined $input_univec_genome_file)  { $errmsg .= "ERROR, --input_univec_sources option not used.\n"; }
-if(! defined $input_amr_segments)        { $errmsg .= "ERROR, --input_amr option not used.\n"; }
-if(! defined $input_sequences)           { $errmsg .= "ERROR, --input_sequences option not used.\n"; }
-if(! defined $output_file)               { $errmsg .= "ERROR, --outfile option not used.\n"; }
-if(defined $errmsg) { 
-  die $errmsg . "\n$usage\n";
 }
 
 # open input/output files
@@ -529,7 +515,7 @@ sub process_taxonomy_tree {
     my ($local_taxonomy_file, $debug_mode) = @_;
 
     my $local_nextline; #one line of taxonomy information
-    my @local_fields;   #split of one line of taxonomy information
+    my @local_fields_A; #split of one line of taxonomy information
     my $local_TAXID_COLUMN       = 0;
     my $local_PARENT_COLUMN      = 1;
     my $local_FORMAL_RANK_COLUMN = 2;
@@ -540,15 +526,15 @@ sub process_taxonomy_tree {
     
     while(defined($local_nextline = <TAXONOMY>)) {
 	chomp($local_nextline);
-	@local_fields = split /\t/, $local_nextline;
+	@local_fields_A = split /\t/, $local_nextline;
         if(scalar(@local_fields_A) != 5) { die "ERROR in $sub_name, unexpected number of fields in $local_taxonomy_file in line: $local_nextline"; }
-	$taxonomy_parent{$local_fields[$local_TAXID_COLUMN]} = $local_fields[$local_PARENT_COLUMN];
-	$taxonomy_level{$local_fields[$local_TAXID_COLUMN]}  = $local_fields[$local_LEVEL_COLUMN];
-	$belongs_in_bacteria{$local_fields[$local_TAXID_COLUMN]}  = $local_fields[$local_BACTERIA_COLUMN];
-	if ($debug_mode && ($genus_to_test == $local_fields[0])) {
+	$taxonomy_parent{$local_fields_A[$local_TAXID_COLUMN]} = $local_fields_A[$local_PARENT_COLUMN];
+	$taxonomy_level{$local_fields_A[$local_TAXID_COLUMN]}  = $local_fields_A[$local_LEVEL_COLUMN];
+	$belongs_in_bacteria{$local_fields_A[$local_TAXID_COLUMN]}  = $local_fields_A[$local_BACTERIA_COLUMN];
+	if ($debug_mode && ($genus_to_test == $local_fields_A[0])) {
           print "Testing taxon $genus_to_test\n"; 
 	}
-        $rank_hash{$local_fields[$local_TAXID_COLUMN]} = $local_fields[$local_FORMAL_RANK_COLUMN];
+        $rank_hash{$local_fields_A[$local_TAXID_COLUMN]} = $local_fields_A[$local_FORMAL_RANK_COLUMN];
     }
     close(TAXONOMY);
 }
