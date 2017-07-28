@@ -33,6 +33,7 @@ $execs_H{"parse_vecscreen"}           = $vecplus_exec_dir . "parse_vecscreen.pl"
 $execs_H{"combine_summaries"}         = $vecplus_exec_dir . "combine_summaries.pl";
 $execs_H{"add_taxonomy"}              = $vecplus_exec_dir . "add_taxonomy.pl";
 $execs_H{"from_vecscreen_to_summary"} = $vecplus_exec_dir . "from_vecscreen_to_summary.pl";
+$execs_H{"compare_vector_matches"}    = $vecplus_exec_dir . "compare_vector_matches_wtaxa.pl";
 validate_executable_hash(\%execs_H);
 
 ########################################################################
@@ -43,21 +44,35 @@ validate_executable_hash(\%execs_H);
 # input files used in the 'Test *.pl' sections below are checked for
 # in this block. So, if you add an input or expected file to a 'Test *.pl'
 # block, add it here too.
+# 
 
 my $command_width = 40;
 printf("%-*s ... ", $command_width, "Checking that required input files exist");
 my $input_dir             = "$vecplusdir/test-files";
 my $input_root            = "test";
 my $input_dir_and_root    = $input_dir . "/" . $input_root;
-my @input_suffixes_A      = ("input_sequence_file.fa");
+my @input_suffixes_A      = ("input_sequence_file.fa", "sample_input_final_step.txt", "sample_candidates.fa");
+# and a second input dir, with the big taxonomy_tree file and the exclusions files required by compare_vector_matches_wtaxa.pl
 my $input_dir2            = "$vecplusdir/info-files";
 my $input_dir_and_root2   = $input_dir2 . "/";
-my @input_suffixes2_A     = ("taxonomy_tree_wlevels.txt"); # this file is too big to require a copy to exist in test-files
+my @input_suffixes2_A     = ("taxonomy_tree_wlevels.txt", # this file is too big to require a copy to exist in test-files
+                             "artificial_whole_sequences.txt",
+                             "artificial_intervals.txt",
+                             "biological_exclusions.txt",
+                             "superkingdom_level_exclusions.txt",
+                             "kingdom_level_exclusions.txt",
+                             "phylum_level_exclusions.txt",
+                             "class_level_exclusions.txt",
+                             "order_level_exclusions.txt",
+                             "family_level_exclusions.txt",
+                             "tribe_level_exclusions.txt", 
+                             "genus_level_exclusions.txt", 
+                             "UniVec10_vs_amr_distinct_intervals.txt");
 
 my $expected_dir          = "$vecplusdir/test-files";
 my $expected_root         = "expected";
 my $expected_dir_and_root = $expected_dir . "/" . $expected_root;
-my @expected_suffixes_A   = ("output_combined.txt", "output_combined.verbose.txt", "add_taxonomy.out", "add_taxonomy.verbose.out");
+my @expected_suffixes_A   = ("output_combined.txt", "output_combined.verbose.txt", "add_taxonomy.out", "add_taxonomy.verbose.out", "output_final_step.txt");
 
 my $output_dir          = "$vecplusdir/test-files";
 my $output_root         = "tmp";
@@ -65,7 +80,7 @@ my $output_dir_and_root = $output_dir . "/" . $output_root;
 
 my $output_dir2          = "./";
 my $output_root2         = "tmp";
-my $output_dir_and_root2 = $output_dir2 . "/" . $output_root2;
+my $output_dir_and_root2 = $output_dir2 . $output_root2;
 
 my $errmsg = "";
 
@@ -139,15 +154,23 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-$cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+$cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root $output_dir_and_root2 --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
-# TODO: - make from_vecscreen_to_summary.pl create and output to a directory
-#       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
-#       - update this file to test from_vecscreen_to_summary.pl
-#       - add parse_vecscreen.pl tests to this file
 @out_A = ("$output_dir_and_root2.output_combined_wtaxonomy.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
 diff_files("$output_dir_and_root2.output_combined_wtaxonomy.txt", "$expected_dir_and_root.output_combined_wtaxonomy.txt");
+rm_files(\@out_A);
+
+######################################
+# Test compare_vector_matches_wtaxa.pl
+######################################
+printf("%-*s ... ", $command_width, "Testing compare_vector_matches_wtaxa.pl");
+######################
+$cmd = $execs_H{"compare_vector_matches"} . " --input_summary $vecplusdir/test-files/test.sample_input_final_step.txt  --input_taxa $vecplusdir/info-files/taxonomy_tree_wlevels.txt --input_artificial_vectors $vecplusdir/info-files/artificial_whole_sequences.txt --input_artificial_segments $vecplusdir/info-files/artificial_intervals.txt --input_univec_sources $vecplusdir/info-files/biological_exclusions.txt  --input_amr $vecplusdir/info-files/UniVec10_vs_amr_distinct_intervals.txt --input_sequences $vecplusdir/test-files/test.sample_candidates.fa --outfile $output_dir_and_root2.output_final_step.txt"; 
+run_command($cmd, 0);
+@out_A = ("$output_dir_and_root2.output_final_step.txt");
+check_many_files_exist_and_are_nonempty(\@out_A, "output");
+diff_files("$output_dir_and_root2.output_final_step.txt", "$expected_dir_and_root.output_final_step.txt");
 rm_files(\@out_A);
 
 #####################
@@ -240,6 +263,8 @@ sub diff_files {
 
   if(! -e $file1) { die "ERROR, file $file1 in $sub_name does not exist"; }
   if(! -e $file2) { die "ERROR, file $file2 in $sub_name does not exist"; }
+
+#  printf("diff'ing $file1 and $file2\n");
 
   return `diff $file1 $file2`;
 }
