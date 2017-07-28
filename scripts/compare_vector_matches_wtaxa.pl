@@ -67,8 +67,7 @@ my $output_file;               # output summary file with three columns added sh
                                # b) taxid of the vector interval if known, and c) lowest common ancestor of the query 
                                # and the subject interval, if applicable or 1 otherwise
 my $debug_mode;                # '1' if --debug enabled, in which case we output debugging print statements
-#my $microsat_file = $vecplusdir . "/info-files/Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
-my $microsat_file = $vecplusdir . "Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
+my $microsat_file = $vecplusdir . "/info-files/Microsatellite_vectors.txt"; # fixed file with names of vectors that contain microsatellites
 if(! -e $microsat_file) { die "ERROR, required file $microsat_file defined as \$VECPLUSDIR/info-files/Microsatellite_vectors.txt does not exist"; }
 
 # variables used in processing input
@@ -797,6 +796,10 @@ sub process_genome_match_info {
   # used only to make sure we don't read two files for a single rank
   # if we do, we die in error
   
+  # the files listed in $local_genome_match_file must exist in the same directory 
+  # as the local_genome_match_file
+  my $local_dir = get_dir_path($local_genome_match_file);
+
   open(FILES_BY_RANK, "<", $local_genome_match_file) or die "Cannot open $local_genome_match_file for input in $sub_name\n"; 
   while(defined($local_file_line = <FILES_BY_RANK>)) {
     chomp($local_file_line);
@@ -804,7 +807,7 @@ sub process_genome_match_info {
       printf "Reading file with rank: $local_file_line\n";
     }
     @local_file_fields = split /\t/, $local_file_line;
-    $local_one_rank_file = $local_file_fields[0];
+    $local_one_rank_file = $local_dir . $local_file_fields[0];
     if ($debug_mode) {
       printf "Reading file: $local_one_rank_file\n";
     }
@@ -1012,4 +1015,28 @@ sub find_lca {
     $local_ancestor2 = $taxonomy_parent{$local_ancestor2};
   }
   return($local_ancestor1);
+}
+
+#################################################################
+# Subroutine : get_dir_path()
+#
+# Purpose:     Given a file name return the directory path, with the final '/'
+#              For example: "foodir/foodir2/foo.stk" becomes "foodir/foodir2/".
+#
+# Arguments: 
+#   $orig_file: name of original file
+# 
+# Returns:     The string $orig_file with actual file name removed
+#
+################################################################# 
+sub get_dir_path {
+  my $narg_expected = 1;
+  my $sub_name = "get_dir_path()";
+  if(scalar(@_) != $narg_expected) { printf STDERR ("ERROR, in $sub_name, entered with %d != %d input arguments.\n", scalar(@_), $narg_expected); exit(1); } 
+  my $orig_file = $_[0];
+  
+  $orig_file =~ s/[^\/]+$//; # remove final string of non '/' characters
+  
+  if($orig_file eq "") { return "./";       }
+  else                 { return $orig_file; }
 }
