@@ -1,5 +1,6 @@
 vecscreen_plus_taxonomy
 Author: Alejandro Schaffer
+Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
 Version: 0.02
@@ -86,6 +87,7 @@ tarball.
 
 -----------
 export VECPLUSDIR="PATH/TO/VEC/PLUS"
+export EPNOPTDIR="PATH/TO/VEC/PLUS"
 export PERL5LIB="$EPNOPTDIR:$PERL5LIB"
 export PATH="$VECPLUSDIR:$PATH";
 -----------
@@ -97,22 +99,36 @@ setenv PERL5LIB "$EPNOPTDIR":"$PERL5LIB"
 setenv PATH "$VECPLUSDIR":"$PATH"
 -----------
 
-Then, after adding those 2 lines, execute this command:
+Then, after adding those 3 lines, execute this command:
 source ~/.bashrc
 OR
 source ~/.cshrc
 
+If PERL5LIB was not already defined (you'll know if you get an error
+message when you run the above 'source' command): 
+use instead
+export PERL5LIB="$EPNOPTDIR"
+for .bashrc, OR
+setenv PERL5LIB "$EPNOPTDIR"
+for .cshrc.
+at line 2 out of 3. 
+
 To check that your environment variables are properly set up do the
 following three commands:
 echo $VECPLUSDIR
+echo $PERL5LIB
 echo $PATH
 
 The first command should return only:
 PATH/TO/VEC/PLUS
 
-The second echo commands should return a potentially longer
+The second echo command should return a potentially longer
 string that begins with the same path:
 PATH/TO/VEC/PLUS
+
+The third echo command should return a (potentially longer) string
+that begins with 
+/panfs/pan1/dnaorg/ssudetection/code/ribotyper-v1:/panfs/pan1/dnaorg/ssudetection/code/epn-options
 
 If that is not the case, please email Eric Nawrocki
 (nawrocke@ncbi.nlm.nih.gov). If you do see the expected output, the
