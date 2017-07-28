@@ -137,7 +137,7 @@ open($output_FH,           ">", "$output_file")         or die "Cannot open $out
 open($output_accession_FH, ">", "$temp_accession_file") or die "Cannot open $temp_accession_file for writing\n"; 
 
 # process the taxonomy file
-process_taxonomy_tree($input_taxa_file, \%taxonomy_parent_H, \%taxonomy_level_H, $debug_mode);
+process_taxonomy_tree($input_taxa_file, $debug_mode);
 
 # read the input summary file and 
 read_input($input_summary_FH, $output_accession_FH, \%accession_H, $verbose_mode, $debug_mode);
@@ -164,6 +164,9 @@ close($output_FH);
 #
 # Synopsis: Reads a file that includes NCBI's taxonomy information 
 #           in four columns (taxon, parent taxon, rank, level).
+#
+# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO ONE OF THE 
+# SAME NAME IN assign_levels_to_taxonomy.pl AND compare_vector_matches_wtaxa.pl
 #
 # Args: $taxonomy_information_file: the NCBI taxonomy file
 #
@@ -385,33 +388,41 @@ sub add_and_output_taxonomy_columns {
 }
 
 
+################################################
 # Subroutine: find_ancestor()
-# Synopsis: given a taxon, returns its ancestor that is at a specific rank such as "genus";
-#           it returns 1 (for root) if there is no ancestor at the specified target rank
 #
-# Args: $local_taxon
-#       $local_target_rank
+# Synopsis: Given a taxon, returns its ancestor that is at a 
+#           specific rank such as "genus"; it returns 1 (for root) 
+#           if there is no ancestor at the specified target rank
 #
-# Returns: the ancestor taxon that is at the specified rank or 1 (for root)
+# THIS SUBROUTINE IS SIMILAR BUT NOT IDENTICAL TO ONE OF THE SAME
+# NAME IN compare_vector_matches_wtaxa.pl.
+#
+# Args: $local_taxon:       the taxon
+#       $local_target_rank: the rank we're interested in
+#       
+# Returns: the ancestor taxon that is at the specified rank 
+#          or 1 (for root)
+#
+################################################
 
 sub find_ancestor {
-
-    my $sub_name = "find_ancestor()";
-    my $nargs_exp = 2;
-    if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
-
-    my ($local_taxon, $local_target_rank) = @_;
-    my $local_ancestor; #one line of taxonomy information
-
-    $local_ancestor = $local_taxon;
-    while ((1 != $local_ancestor) && (defined($taxonomy_parent_H{$local_ancestor})) && ((!(defined($taxonomy_rank_H{$local_ancestor})))  || (!($taxonomy_rank_H{$local_ancestor} eq $local_target_rank)))) {
-
-        $local_ancestor = $taxonomy_parent_H{$local_ancestor};
-    }
-    if ((1 != $local_ancestor) && (!defined($taxonomy_parent_H{$local_ancestor}))) {
-	return(1);
-    }
-    return($local_ancestor);
+  my $sub_name = "find_ancestor()";
+  my $nargs_exp = 2;
+  if(scalar(@_) != $nargs_exp) { die "ERROR $sub_name entered with wrong number of input args"; }
+  
+  my ($local_taxon, $local_target_rank) = @_;
+  my $local_ancestor; #one line of taxonomy information
+  
+  $local_ancestor = $local_taxon;
+  while ((1 != $local_ancestor) && (defined($taxonomy_parent_H{$local_ancestor})) && ((!(defined($taxonomy_rank_H{$local_ancestor})))  || (!($taxonomy_rank_H{$local_ancestor} eq $local_target_rank)))) {
+    
+    $local_ancestor = $taxonomy_parent_H{$local_ancestor};
+  }
+  if ((1 != $local_ancestor) && (!defined($taxonomy_parent_H{$local_ancestor}))) {
+    return(1);
+  }
+  return($local_ancestor);
 }
 
 #################################################################

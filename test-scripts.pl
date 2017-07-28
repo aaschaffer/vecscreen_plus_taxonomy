@@ -23,8 +23,8 @@ printf("%-*s ... ", $command_width, "Checking that required input files exist");
 my $input_dir             = "./test-files";
 my $input_root            = "test";
 my $input_dir_and_root    = $input_dir . "/" . $input_root;
-my @input_suffixes_A      = ("input_sequence_file.fa", "taxonomy_tree_wlevels.txt");
-#my @input_suffixes_A      = ("input_sequence_file.fa", "taxonomy_tree_wlevels.txt", "output_internal.txt", "output_terminal.txt", "combine_summaries");
+my @input_suffixes_A      = ("input_sequence_file.fa");
+my @input_other_files_A   = ("taxonomy_tree_wlevels.txt"); # this file is too big to require a copy to exist in test-files
 
 my $expected_dir          = "./test-files";
 my $expected_root         = "expected";
@@ -44,6 +44,9 @@ my $errmsg = "";
 # check input files exist
 foreach my $suffix (@input_suffixes_A) { 
   $errmsg .= check_file_exists_and_is_nonempty($input_dir . "/" . $input_root . "." . $suffix, "input");
+}
+foreach my $file (@input_other_files_A) { 
+  $errmsg .= check_file_exists_and_is_nonempty($file, "input");
 }
 # check expected output files exist
 foreach my $suffix (@expected_suffixes_A) { 
@@ -84,7 +87,7 @@ printf("done.\n");
 ######################
 printf("%-*s ... ", $command_width, "Testing add_taxonomy.pl");
 ######################
-my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
+my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -93,7 +96,7 @@ rm_files(\@out_A);
 
 #####################
 # same command, but with --verbose added
-my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
+my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.verbose.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -108,7 +111,7 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-my $cmd = "./from_vecscreen_to_summary.pl --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa $input_dir_and_root.taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+my $cmd = "./from_vecscreen_to_summary.pl --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 # TODO: - make from_vecscreen_to_summary.pl create and output to a directory
 #       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1

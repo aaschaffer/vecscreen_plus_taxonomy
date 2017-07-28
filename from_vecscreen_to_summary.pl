@@ -20,6 +20,19 @@ use Time::HiRes qw(gettimeofday); # for timings
 
 require "epn-options.pm";
 
+# make sure the VECPLUSDIR environment variable is set
+my $vecplusdir = $ENV{'VECPLUSDIR'};
+if(! exists($ENV{'VECPLUSDIR'})) { 
+  printf STDERR ("\nERROR, the environment variable VECPLUSDIR is not set, please set it to the directory that was created when you unpackaged the vecscreen_plus_taxonomy package.\n"); 
+  exit(1); 
+}
+if(! (-d $vecplusdir)) { 
+  printf STDERR ("\nERROR, the vecscreen_plus_taxonomy directory specified by your environment variable VECPLUSDIR does not exist.\n"); 
+  exit(1); 
+}    
+
+my $vecplus_exec_dir = $vecplusdir . "/"; 
+
 my $output_root      = undef; # root for naming output files
 my $input_fasta_file = undef; # input fasta file
 my $input_taxa_file  = undef; # input file with taxonomy in a tab-delimited four-column format
@@ -84,11 +97,6 @@ $verbose_mode           = opt_Get("--verbose", \%opt_HH);
 $combine_summaries_mode = opt_Get("--combine_output", \%opt_HH);
 $keep_mode              = opt_Get("--keep", \%opt_HH);
 
-# EPN added the block below to die if either:
-# - non-existent option is used
-# - any of the required options are not used. 
-# - -h is used
-
 # exit if necessary (if options were messed up)
 # first, determine if all required options were actually used
 my $reqopts_errmsg = "";
@@ -97,21 +105,23 @@ if(! defined $input_fasta_file)   { $reqopts_errmsg .= "ERROR, --input_fasta opt
 if(! defined $input_taxa_file)    { $reqopts_errmsg .= "ERROR, --input_taxa option not used. It is required.\n"; }
 
 if(($reqopts_errmsg ne "") || (! $all_options_recognized) || ($GetOptions_H{"-h"})) {
-    opt_OutputHelp(*STDOUT, $usage, \%opt_HH, \@opt_order_A, \%opt_group_desc_H);
-    if   ($reqopts_errmsg ne "")     { die $reqopts_errmsg; }
-    elsif(! $all_options_recognized) { die "ERROR, unrecognized option;"; }
-    else                             { exit 0; } # -h, exit with 0 status
+  opt_OutputHelp(*STDOUT, $usage, \%opt_HH, \@opt_order_A, \%opt_group_desc_H);
+  if   ($reqopts_errmsg ne "")     { die $reqopts_errmsg; }
+  elsif(! $all_options_recognized) { die "ERROR, unrecognized option;"; }
+  else                             { exit 0; } # -h, exit with 0 status
 }
 
 $verbose_string = ($verbose_mode) ? "--verbose" : "";
 $keep_string    = ($keep_mode)    ? "--keep"    : "";
 
-# executable commands
-my $vecscreen         = "vecscreen";
-my $srcchk            = "srcchk";
-my $parse_vecscreen   = "parse_vecscreen.pl";
-my $combine_summaries = "combine_summaries.pl";
-my $add_taxonomy      = "add_taxonomy.pl";
+# make sure the executable files we need exist in $VECPLUSDIR
+my %execs_H = (); # hash with paths to all required executables
+$execs_H{"vecscreen"}         = $vecplus_exec_dir . "vecscreen";
+$execs_H{"srcchk"}            = $vecplus_exec_dir . "srcchk";
+$execs_H{"parse_vecscreen"}   = $vecplus_exec_dir . "parse_vecscreen.pl";
+$execs_H{"combine_summaries"} = $vecplus_exec_dir . "combine_summaries.pl";
+$execs_H{"add_taxonomy"}      = $vecplus_exec_dir . "add_taxonomy.pl";
+validate_executable_hash(\%execs_H);
 
 # set output file names
 my $temp_vecscreen_output_file     = $output_root . ".vecscreen_output.txt";
@@ -128,18 +138,12 @@ my @arg_A      = (); # necessary to pass into opt_OutputPreamble()
 output_banner(*STDOUT, $version, $releasedate, $synopsis, $date);
 opt_OutputPreamble(*STDOUT, \@arg_desc_A, \@arg_A, \%opt_HH, \@opt_order_A);
 
-# EPN added comments here and added a subroutine run_command() to
-# excecute all system calls. That subroutine will fail if any of the system() calls
-# fail. 
-# Also added subroutines (output_progress_prior() and output_progress_complete()) 
-# that facilitate a strategy for outputting each stage of a script to the user
-# This strategy also outputs the time each step takes.
 ##########################
 # Step 1. Call vecscreen #
 ##########################
 my $progress_w = 51; # the width of the left hand column in our progress output, hard-coded
 my $start_secs = output_progress_prior("Running vecscreen", $progress_w, undef, *STDOUT);
-run_command("$vecscreen -query $input_fasta_file -text_output > $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
+run_command($execs_H{"vecscreen"} . " -query $input_fasta_file -text_output > $temp_vecscreen_output_file", 0); # 0: don't echo command to STDOUT
 my $desc_str = sprintf("output saved as $temp_vecscreen_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
 output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 
@@ -147,7 +151,7 @@ output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 # Step 2. Parse vecscreen output #
 ##################################
 $start_secs = output_progress_prior("Parsing vecscreen output", $progress_w, undef, *STDOUT);
-run_command("$parse_vecscreen --input $temp_vecscreen_output_file $verbose_string --outfile_internal $temp_internal_output_file --outfile_terminal $temp_terminal_output_file", 0); # 0: don't echo command to STDOUT
+run_command($execs_H{"parse_vecscreen"} . " --input $temp_vecscreen_output_file $verbose_string --outfile_internal $temp_internal_output_file --outfile_terminal $temp_terminal_output_file", 0); # 0: don't echo command to STDOUT
 $desc_str = sprintf("output saved as $temp_internal_output_file and $temp_terminal_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
 output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 
@@ -156,7 +160,7 @@ output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 ###############################################
 if ($combine_summaries_mode) {
   $start_secs = output_progress_prior("Combining output [due to --combine_output]", $progress_w, undef, *STDOUT);
-  run_command("$combine_summaries --input_terminal $temp_terminal_output_file --input_internal $temp_internal_output_file $verbose_string --outfile $temp_combined_output_file", 0); # 0: don't echo command to STDOUT
+  run_command($execs_H{"combine_summaries"} . " --input_terminal $temp_terminal_output_file --input_internal $temp_internal_output_file $verbose_string --outfile $temp_combined_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = sprintf("output saved as $temp_combined_output_file%s", $keep_mode ? "]" : " (temporarily)"); 
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
@@ -166,14 +170,14 @@ if ($combine_summaries_mode) {
 ####################################
 if($combine_summaries_mode) { 
   $start_secs = output_progress_prior("Adding taxonomy information to output", $progress_w, undef, *STDOUT);
-  run_command("$add_taxonomy --input_summary $temp_combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command($execs_H{"add_taxonomy"} . " --input_summary $temp_combined_output_file --input_taxa $input_taxa_file $verbose_string $keep_string --outfile $combined_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
 else {
   $start_secs = output_progress_prior("Adding taxonomy information to output in two stages", $progress_w, undef, *STDOUT);
-  run_command("$add_taxonomy --input_summary $temp_internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
-  run_command("$add_taxonomy --input_summary $temp_terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command($execs_H{"add_taxonomy"} . " --input_summary $temp_internal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $internal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
+  run_command($execs_H{"add_taxonomy"} . " --input_summary $temp_terminal_output_file --input_taxa $input_taxa_file $verbose_string --outfile $terminal_wtaxonomy_output_file", 0); # 0: don't echo command to STDOUT
   $desc_str = "output saved as $internal_wtaxonomy_output_file and $combined_wtaxonomy_output_file";
   output_progress_complete($start_secs, $desc_str, undef, *STDOUT);
 }
@@ -486,4 +490,44 @@ sub seconds_since_epoch {
 
   my ($seconds, $microseconds) = gettimeofday();
   return ($seconds + ($microseconds / 1000000.));
+}
+
+#################################################################
+# Subroutine : validate_executable_hash()
+#
+# Purpose:     Given a reference to a hash in which the 
+#              values are paths to executables, validate
+#              that those files are executable.
+#
+# Arguments: 
+#   $execs_HR: REF to hash, keys are short names to executable
+#              e.g. "vecscreen", values are full paths to that
+#              executable, e.g. "/usr/local/infernal/1.1.1/bin/vecscreen"
+# 
+# Returns:     void
+#
+# Dies:        if one or more executables does not exist
+#
+################################################################# 
+sub validate_executable_hash { 
+  my $nargs_expected = 1;
+  my $sub_name = "validate_executable_hash()";
+  if(scalar(@_) != $nargs_expected) { printf STDERR ("ERROR, $sub_name entered with %d != %d input arguments.\n", scalar(@_), $nargs_expected); exit(1); } 
+  my ($execs_HR) = (@_);
+
+  my $fail_str = undef;
+  foreach my $key (sort keys %{$execs_HR}) { 
+    if(! -e $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} does not exist.\n"; 
+    }
+    elsif(! -x $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} exists but is not an executable file.\n"; 
+    }
+  }
+  
+  if(defined $fail_str) { 
+    die "ERROR in $sub_name(),\n$fail_str"; 
+  }
+
+  return;
 }
