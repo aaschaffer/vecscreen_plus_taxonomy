@@ -1,8 +1,10 @@
 vecscreen_plus_taxonomy
 Author: Alejandro Schaffer
+Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.02
+Version: 0.03
+July 2017
 ------------------
 README
 
@@ -22,6 +24,7 @@ BACKGROUND
 SETTING UP ENVIRONMENT VARIABLES
 SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl
 SAMPLE RUN, USAGE AND OUTPUT OF compare_vector_matches_w_taxa.pl
+TEST SCRIPT
 RELEVANT FILES
 METHODS
 CREATING THE TAXONOMY FILE
@@ -79,40 +82,57 @@ directory. To determine what shell you use type 'echo $SHELL', if it
 returns '/bin/bash', then update your .bashrc file, if it returns
 '/bin/csh' or '/bin/tcsh' then update your .cshrc file.
 
-The 2 lines to add to your .bashrc file, ***but make sure that you
-replace *PATH/TO/VEC/PLUS* with the directory path to the directory
-created when you unpacked the FIXME tarball.
+The 3 lines to add to your .bashrc file, ***but make sure that you
+replace PATH/TO/VEC/PLUS with the directory path to the directory
+created when you unpacked the vecscreen_plus_taxonomy-0.03.tar.gz
+tarball.
 
 -----------
-export VECPLUSDIR="*PATH/TO/VEC/PLUS*"
+export VECPLUSDIR="PATH/TO/VEC/PLUS"
+export PERL5LIB="$VECPLUSDIR:$PERL5LIB"
 export PATH="$VECPLUSDIR:$PATH";
 -----------
 
-The 2 lines to add to your .cshrc file:
+The 3 lines to add to your .cshrc file:
 -----------
-setenv SENSORDIR "*PATH/TO/VEC/PLUS"
+setenv SENSORDIR "PATH/TO/VEC/PLUS"
+setenv PERL5LIB "$VECPLUSDIR":"$PERL5LIB"
 setenv PATH "$VECPLUSDIR":"$PATH"
 -----------
 
-Then, after adding those 2 lines, execute this command:
+Then, after adding those 3 lines, execute this command:
 source ~/.bashrc
 OR
 source ~/.cshrc
 
+If PERL5LIB was not already defined (you'll know if you get an error
+message when you run the above 'source' command): 
+use instead
+export PERL5LIB="$EPNOPTDIR"
+for .bashrc, OR
+setenv PERL5LIB "$EPNOPTDIR"
+for .cshrc.
+at line 2 out of 3. 
+
 To check that your environment variables are properly set up do the
 following three commands:
 echo $VECPLUSDIR
+echo $PERL5LIB
 echo $PATH
 
 The first command should return only:
-*PATH/TO/VEC/PLUS*
+PATH/TO/VEC/PLUS
 
-The second echo commands should return a potentially longer
+The second echo command should return a potentially longer
 string that begins with the same path:
-*PATH/TO/VEC/PLUS*
+PATH/TO/VEC/PLUS
 
-If that is not the case, please email Eric Nawrocki
-(nawrocke@ncbi.nlm.nih.gov). If you do see the expected output, the
+The third echo command should return a (potentially longer) string
+that begins with the same path:
+PATH/TO/VEC/PLUS
+
+If that is not the case, please email Alejandro Schaffer
+(schaffer@ncbi.nlm.nih.gov). If you do see the expected output, the
 following sample run should work.
 
 ****************************************************************
@@ -120,23 +140,42 @@ following sample run should work.
 ****************************************************************
 Here is an example command that will run from_vecscreen_to_summary.pl
 on the fasta file myseqs.fa using the taxonomy file
-taxonomy_tree_wlevels.txt. (An example of running compare
+taxonomy_tree_wlevels.txt. 
 
-> from_vecscreen_to_summary.pl --input_fasta myseqs.fa --input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt --output_root mytest
+> from_vecscreen_to_summary.pl --output_root mytest --input_fasta $VECPLUSDIR/test-files/test.input_sequence_file.fa --input_taxa $VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt --combine_output --verbose > mytest.out
 
-The sequence file (myseqs.fa) can be any nucleotide sequence file in
-FASTA format.
+This command is contained in the file
+$VECPLUSDIR/scripts/sample_run.sh. In fact, it's better to just run
+that shell script file, because it will also check that the expected
+output is correct:
 
-The taxonomy file (taxonomy_tree_wlevels.txt) is a file in a special
-format that includes taxonomy information based on NCBI's
-taxonomy. This can either be created by the user from the NCBI
-taxonomy file, or the user can use the provided file:
+> sh $VECPLUSDIR/scripts/sample_run.sh
 
-/panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/taxonomy_tree_wlevels.txt
-which was created in March 2017. If you are using this in the first
-few months of 2017, the provided file above should be fine. After
-that, you should create a new up-to-date file. Instructions for doing
-that are provided below in the section CREATING THE TAXONOMY FILE.
+When you run the above 'sh' command, you should see output like this:
+comparing expected output test-files/expected.output_combined_wtaxonomy.txt to observed output mytest.output_combined_wtaxonomy.txt
+SUCCESS: Files are identical
+
+After running the above from_vecscreen_to_summary.pl command, the
+one-line per sequence output is in the file
+mytest.output_combined_wtaxonomy.txt. This 11-column format is
+described below: 'Verbose output format (enabled with --verbose
+option): 11 columns'.
+
+The standard output of the script which describes briefly what the
+script is doing, is in the file mytest.out.
+
+The sequence file ($VECPLUSDIR/test-files/test.input_sequence_file.fa)
+can be any nucleotide sequence file in FASTA format. 
+
+The taxonomy file ($VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt)
+is a file in a special format that includes taxonomy information based
+on NCBI's taxonomy. This can either be created by the user from the
+NCBI taxonomy file, or the user can use the provided file
+taxonomy_tree_wlevels.txt which was created in March 2017. If you are
+using this in the first few months of 2017, the provided file above
+should be fine. After that, you should create a new up-to-date
+file. Instructions for doing that are provided below in the section
+CREATING THE TAXONOMY FILE.
 
 The options that can be provided to from_vecscreen_to_summary.pl are:
   --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 
@@ -217,21 +256,32 @@ The compare_vector_matches_w_taxa.pl script can only be run on the
 11-column output of from_vecscreen_to_summary.pl that is created when
 the --verbose option is used for that script.
 
-Here is the example usage of compare_vector_matches_wtaxa.pl. This
-command is included as a shell script in the file sample_compare_run. 
+Here is the example usage of compare_vector_matches_wtaxa.pl:
 
 compare_vector_matches_wtaxa.pl \ 
---input_summary $VECPLUSDIR/test-files/sample_input_final_step.txt \ 
---input_taxa $VECPLUSDIR/taxonomy_tree_wlevels.txt \ 
---input_artificial_vectors $VECPLUSDIR/artificial_whole_sequences.txt \ 
---input_artificial_segments $VECPLUSDIR/artificial_intervals.txt \ 
---input_univec_sources $VECPLUSDIR/biological_exclusions.txt \ 
---input_amr $VECPLUSDIR/UniVec10_vs_amr_distinct_intervals.txt \
---input_sequences $VECPLUSDIR/test-files/candidates.fa \
---outfile my_output_final_step2.txt
+--input_summary $VECPLUSDIR/test-files/test.sample_input_final_step.txt \
+--input_taxa $VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt \
+--input_artificial_vectors $VECPLUSDIR/info-files/artificial_whole_sequences.txt \
+--input_artificial_segments $VECPLUSDIR/info-files/artificial_intervals.txt \
+--input_univec_sources $VECPLUSDIR/info-files/biological_exclusions.txt \
+--input_amr $VECPLUSDIR/info-files/UniVec10_vs_amr_distinct_intervals.txt \
+--input_sequences $VECPLUSDIR/test-files/test.sample_candidates.fa \
+--outfile my_output_final_step.txt
 
-After running this, the file 'my_output_final_step.txt' will include
-the output of compare_vector_matches_wtaxa.pl which is the file
+This command is contained in the file
+$VECPLUSDIR/test-files/sample_compare_run.sh. In fact, it's better to
+just run that shell script file, because it will also check that the
+expected output is correct:
+
+> sh $VECPLUSDIR/scripts/sample_compare_run.sh
+
+When you run the above 'sh' command, you should see output like this:
+comparing expected output test-files/expected.output_final_step.txt to observed output my_outputfinal_step.txt
+SUCCESS: Files are identical
+
+After running this compare_vector_matches_wtaxa.pl command, the file
+'my_output_final_step.txt' will include the output of
+compare_vector_matches_wtaxa.pl which is the file
 test-files/sample_input_final_step.txt with 3 additional columns:
 
 Column 12: the classification of the match
@@ -253,6 +303,32 @@ to one of the higher-level files*:
 
 * Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
   these.
+
+***************
+**TEST SCRIPT**
+***************
+There is a 'test' script included in the vecscreen_plus_taxonomy
+distribution that you should run to make sure that everything is set
+up correctly, in addition to doing the two example sample runs above.
+
+To run the test script, execute the following command:
+> $VECPLUSDIR/scripts/test_vecscreen_plus_taxonomy_scripts.pl
+
+You should see the following output:
+--
+Checking that required input files exist ... done.
+Testing combine_summaries.pl             ... done.
+Testing add_taxonomy.pl                  ... done.
+Testing from_vecscreen_to_summary.pl     ... done.
+Testing compare_vector_matches_wtaxa.pl  ... done.
+# All tests passed.
+# SUCCESS
+--
+
+If not, make sure that you've set up your environment variable
+$VECPLUSDIR correctly as explained above in the 'SETTING UP
+ENVIRONMENT VARIABLES' section. If you still have problems, email: 
+schaffer@ncbi.nlm.nih.gov.
 
 ******************
 **RELEVANT FILES**
