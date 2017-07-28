@@ -1,5 +1,9 @@
-# test-scripts.pl: Testing script that runs example commands and compares output files 
-#                  with expected files to make sure they are identical.
+#!/usr/bin/perl -w
+# the first line of perl code has to be above
+#
+# test_vecscreen_plus_taxonomy_scriptsscripts.pl: 
+# Testing script that runs example commands and compares output files 
+# with expected files to make sure they are identical.
 #
 # EPN, Mon Jan 30 09:39:20 2017
 # 
@@ -42,20 +46,20 @@ validate_executable_hash(\%execs_H);
 
 my $command_width = 40;
 printf("%-*s ... ", $command_width, "Checking that required input files exist");
-my $input_dir             = "$VECPLUSDIR/test-files";
+my $input_dir             = "$vecplusdir/test-files";
 my $input_root            = "test";
 my $input_dir_and_root    = $input_dir . "/" . $input_root;
 my @input_suffixes_A      = ("input_sequence_file.fa");
-my $input_dir2            = "$VECPLUSDIR/info-files";
-my $input_dir_and_root2   = $input_dir . "/" . $input_root;
+my $input_dir2            = "$vecplusdir/info-files";
+my $input_dir_and_root2   = $input_dir2 . "/";
 my @input_suffixes2_A     = ("taxonomy_tree_wlevels.txt"); # this file is too big to require a copy to exist in test-files
 
-my $expected_dir          = "$VECPLUSDIR/test-files";
+my $expected_dir          = "$vecplusdir/test-files";
 my $expected_root         = "expected";
 my $expected_dir_and_root = $expected_dir . "/" . $expected_root;
 my @expected_suffixes_A   = ("output_combined.txt", "output_combined.verbose.txt", "add_taxonomy.out", "add_taxonomy.verbose.out");
 
-my $output_dir          = "$VECPLUSDIR/test-files";
+my $output_dir          = "$vecplusdir/test-files";
 my $output_root         = "tmp";
 my $output_dir_and_root = $output_dir . "/" . $output_root;
 
@@ -71,9 +75,6 @@ foreach my $suffix (@input_suffixes_A) {
 }
 foreach my $suffix (@input_suffixes2_A) { 
   $errmsg .= check_file_exists_and_is_nonempty($input_dir2 . "/" . $suffix, "input");
-}
-foreach my $file (@input_other_files_A) { 
-  $errmsg .= check_file_exists_and_is_nonempty($file, "input");
 }
 # check expected output files exist
 foreach my $suffix (@expected_suffixes_A) { 
@@ -99,7 +100,7 @@ rm_files(\@out_A);
 
 #####################
 # same command, but with --verbose added
-my $cmd = $execs_H{"combine_summaries"} . " --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.verbose.txt --verbose > /dev/null"; # standard output is expected to be empty
+$cmd = $execs_H{"combine_summaries"} . " --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.verbose.txt --verbose > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.output_combined.verbose.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -114,7 +115,7 @@ printf("done.\n");
 ######################
 printf("%-*s ... ", $command_width, "Testing add_taxonomy.pl");
 ######################
-my $cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
+$cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -123,7 +124,7 @@ rm_files(\@out_A);
 
 #####################
 # same command, but with --verbose added
-my $cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
+$cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.verbose.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -138,16 +139,19 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-my $cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+$cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 # TODO: - make from_vecscreen_to_summary.pl create and output to a directory
 #       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
 #       - update this file to test from_vecscreen_to_summary.pl
 #       - add parse_vecscreen.pl tests to this file
-my @out_A = ("$output_dir_and_root2.output_combined_wtaxonomy.txt");
+@out_A = ("$output_dir_and_root2.output_combined_wtaxonomy.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
 diff_files("$output_dir_and_root2.output_combined_wtaxonomy.txt", "$expected_dir_and_root.output_combined_wtaxonomy.txt");
 rm_files(\@out_A);
+
+#####################
+printf("done.\n");
 
 printf("# All tests passed.\n");
 printf("# SUCCESS\n");
