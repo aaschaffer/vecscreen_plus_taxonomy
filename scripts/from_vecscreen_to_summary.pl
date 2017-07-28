@@ -30,8 +30,7 @@ if(! (-d $vecplusdir)) {
   printf STDERR ("\nERROR, the vecscreen_plus_taxonomy directory specified by your environment variable VECPLUSDIR does not exist.\n"); 
   exit(1); 
 }    
-
-my $vecplus_exec_dir = $vecplusdir . "/"; 
+my $vecplus_exec_dir = $vecplusdir . "/scripts/"; 
 
 my $output_root      = undef; # root for naming output files
 my $input_fasta_file = undef; # input fasta file

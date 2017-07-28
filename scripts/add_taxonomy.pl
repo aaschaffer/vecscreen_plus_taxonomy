@@ -19,6 +19,18 @@ use Getopt::Long;
 
 require "epn-options.pm";
 
+# make sure the VECPLUSDIR environment variable is set
+my $vecplusdir = $ENV{'VECPLUSDIR'};
+if(! exists($ENV{'VECPLUSDIR'})) { 
+  printf STDERR ("\nERROR, the environment variable VECPLUSDIR is not set, please set it to the directory that was created when you unpackaged the vecscreen_plus_taxonomy package.\n"); 
+  exit(1); 
+}
+if(! (-d $vecplusdir)) { 
+  printf STDERR ("\nERROR, the vecscreen_plus_taxonomy directory specified by your environment variable VECPLUSDIR does not exist.\n"); 
+  exit(1); 
+}    
+my $vecplus_exec_dir = $vecplusdir . "/scripts/"; 
+
 # variables related to input/output files and command line options
 my $input_summary_file;        # input file of parsed vecscreen output
 my $input_taxa_file;           # input file with taxonomy in a tab-delimited four-column format
@@ -126,6 +138,12 @@ if(($reqopts_errmsg ne "") || (! $all_options_recognized)) {
   if   ($reqopts_errmsg ne "") { die $reqopts_errmsg; }
   else                         { die "ERROR, unrecognized option;"; }
 }
+
+# make sure the executable files we need exist in $VECPLUSDIR
+my %execs_H = (); # hash with paths to all required executables
+$execs_H{"srcchk"}            = $vecplus_exec_dir . "srcchk";
+validate_executable_hash(\%execs_H);
+
 # define the file names that depend on $output_file, now that we
 # know that $output_file is valid
 $temp_accession_file = $output_file . ".tmp_accession.txt";
@@ -450,6 +468,46 @@ sub run_command {
 
   if($? != 0) { 
     die "ERROR in $sub_name, the following command failed:\n$cmd\n";
+  }
+
+  return;
+}
+
+#################################################################
+# Subroutine : validate_executable_hash()
+#
+# Purpose:     Given a reference to a hash in which the 
+#              values are paths to executables, validate
+#              that those files are executable.
+#
+# Arguments: 
+#   $execs_HR: REF to hash, keys are short names to executable
+#              e.g. "vecscreen", values are full paths to that
+#              executable, e.g. "/usr/local/infernal/1.1.1/bin/vecscreen"
+# 
+# Returns:     void
+#
+# Dies:        if one or more executables does not exist
+#
+################################################################# 
+sub validate_executable_hash { 
+  my $nargs_expected = 1;
+  my $sub_name = "validate_executable_hash()";
+  if(scalar(@_) != $nargs_expected) { printf STDERR ("ERROR, $sub_name entered with %d != %d input arguments.\n", scalar(@_), $nargs_expected); exit(1); } 
+  my ($execs_HR) = (@_);
+
+  my $fail_str = undef;
+  foreach my $key (sort keys %{$execs_HR}) { 
+    if(! -e $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} does not exist.\n"; 
+    }
+    elsif(! -x $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} exists but is not an executable file.\n"; 
+    }
+  }
+  
+  if(defined $fail_str) { 
+    die "ERROR in $sub_name(),\n$fail_str"; 
   }
 
   return;

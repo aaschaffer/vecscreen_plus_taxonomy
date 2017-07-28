@@ -9,6 +9,28 @@ use strict;
 select *STDOUT;
 $| = 1;
 
+# make sure the VECPLUSDIR environment variable is set
+my $vecplusdir = $ENV{'VECPLUSDIR'};
+if(! exists($ENV{'VECPLUSDIR'})) { 
+  printf STDERR ("\nERROR, the environment variable VECPLUSDIR is not set, please set it to the directory that was created when you unpackaged the vecscreen_plus_taxonomy package.\n"); 
+  exit(1); 
+}
+if(! (-d $vecplusdir)) { 
+  printf STDERR ("\nERROR, the vecscreen_plus_taxonomy directory specified by your environment variable VECPLUSDIR does not exist.\n"); 
+  exit(1); 
+}    
+my $vecplus_exec_dir = $vecplusdir . "/scripts/"; 
+
+# make sure the executable files we need exist in $VECPLUSDIR
+my %execs_H = (); # hash with paths to all required executables
+$execs_H{"vecscreen"}                 = $vecplus_exec_dir . "vecscreen";
+$execs_H{"srcchk"}                    = $vecplus_exec_dir . "srcchk";
+$execs_H{"parse_vecscreen"}           = $vecplus_exec_dir . "parse_vecscreen.pl";
+$execs_H{"combine_summaries"}         = $vecplus_exec_dir . "combine_summaries.pl";
+$execs_H{"add_taxonomy"}              = $vecplus_exec_dir . "add_taxonomy.pl";
+$execs_H{"from_vecscreen_to_summary"} = $vecplus_exec_dir . "from_vecscreen_to_summary.pl";
+validate_executable_hash(\%execs_H);
+
 ########################################################################
 # Ensure we have all input files and expected output files (to compare
 # to actual output files we create) that we need.
@@ -20,18 +42,20 @@ $| = 1;
 
 my $command_width = 40;
 printf("%-*s ... ", $command_width, "Checking that required input files exist");
-my $input_dir             = "./test-files";
+my $input_dir             = "$VECPLUSDIR/test-files";
 my $input_root            = "test";
 my $input_dir_and_root    = $input_dir . "/" . $input_root;
 my @input_suffixes_A      = ("input_sequence_file.fa");
-my @input_other_files_A   = ("taxonomy_tree_wlevels.txt"); # this file is too big to require a copy to exist in test-files
+my $input_dir2            = "$VECPLUSDIR/info-files";
+my $input_dir_and_root2   = $input_dir . "/" . $input_root;
+my @input_suffixes2_A     = ("taxonomy_tree_wlevels.txt"); # this file is too big to require a copy to exist in test-files
 
-my $expected_dir          = "./test-files";
+my $expected_dir          = "$VECPLUSDIR/test-files";
 my $expected_root         = "expected";
 my $expected_dir_and_root = $expected_dir . "/" . $expected_root;
 my @expected_suffixes_A   = ("output_combined.txt", "output_combined.verbose.txt", "add_taxonomy.out", "add_taxonomy.verbose.out");
 
-my $output_dir          = "./test-files";
+my $output_dir          = "$VECPLUSDIR/test-files";
 my $output_root         = "tmp";
 my $output_dir_and_root = $output_dir . "/" . $output_root;
 
@@ -44,6 +68,9 @@ my $errmsg = "";
 # check input files exist
 foreach my $suffix (@input_suffixes_A) { 
   $errmsg .= check_file_exists_and_is_nonempty($input_dir . "/" . $input_root . "." . $suffix, "input");
+}
+foreach my $suffix (@input_suffixes2_A) { 
+  $errmsg .= check_file_exists_and_is_nonempty($input_dir2 . "/" . $suffix, "input");
 }
 foreach my $file (@input_other_files_A) { 
   $errmsg .= check_file_exists_and_is_nonempty($file, "input");
@@ -63,7 +90,7 @@ printf("done.\n");
 ###########################
 printf("%-*s ... ", $command_width, "Testing combine_summaries.pl");
 ######################
-my $cmd = "./combine_summaries.pl --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.txt > /dev/null"; # standard output is expected to be empty
+my $cmd = $execs_H{"combine_summaries"} . " --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.txt > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 my @out_A = ("$output_dir_and_root.output_combined.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -72,7 +99,7 @@ rm_files(\@out_A);
 
 #####################
 # same command, but with --verbose added
-my $cmd = "./combine_summaries.pl --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.verbose.txt --verbose > /dev/null"; # standard output is expected to be empty
+my $cmd = $execs_H{"combine_summaries"} . " --input_terminal $input_dir_and_root.output_internal.txt --input_internal $input_dir_and_root.output_terminal.txt --outfile $output_dir_and_root.output_combined.verbose.txt --verbose > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.output_combined.verbose.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -87,7 +114,7 @@ printf("done.\n");
 ######################
 printf("%-*s ... ", $command_width, "Testing add_taxonomy.pl");
 ######################
-my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
+my $cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.out"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -96,7 +123,7 @@ rm_files(\@out_A);
 
 #####################
 # same command, but with --verbose added
-my $cmd = "./add_taxonomy.pl --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
+my $cmd = $execs_H{"add_taxonomy"} . " --input_summary $input_dir_and_root.combine_summaries --input_taxa taxonomy_tree_wlevels.txt --outfile $output_dir_and_root.add_taxonomy.verbose.out --verbose"; 
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root.add_taxonomy.verbose.out");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
@@ -111,7 +138,7 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-my $cmd = "./from_vecscreen_to_summary.pl --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+my $cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root tmp --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 # TODO: - make from_vecscreen_to_summary.pl create and output to a directory
 #       - have from_vecscreen_to_summary.pl make sure all necessary files for all steps exist before starting step 1
@@ -270,6 +297,46 @@ sub rm_files {
 
   foreach my $file (@{$file_AR}) { 
     unlink $file; 
+  }
+
+  return;
+}
+
+#################################################################
+# Subroutine : validate_executable_hash()
+#
+# Purpose:     Given a reference to a hash in which the 
+#              values are paths to executables, validate
+#              that those files are executable.
+#
+# Arguments: 
+#   $execs_HR: REF to hash, keys are short names to executable
+#              e.g. "vecscreen", values are full paths to that
+#              executable, e.g. "/usr/local/infernal/1.1.1/bin/vecscreen"
+# 
+# Returns:     void
+#
+# Dies:        if one or more executables does not exist
+#
+################################################################# 
+sub validate_executable_hash { 
+  my $nargs_expected = 1;
+  my $sub_name = "validate_executable_hash()";
+  if(scalar(@_) != $nargs_expected) { printf STDERR ("ERROR, $sub_name entered with %d != %d input arguments.\n", scalar(@_), $nargs_expected); exit(1); } 
+  my ($execs_HR) = (@_);
+
+  my $fail_str = undef;
+  foreach my $key (sort keys %{$execs_HR}) { 
+    if(! -e $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} does not exist.\n"; 
+    }
+    elsif(! -x $execs_HR->{$key}) { 
+      $fail_str .= "\t$execs_HR->{$key} exists but is not an executable file.\n"; 
+    }
+  }
+  
+  if(defined $fail_str) { 
+    die "ERROR in $sub_name(),\n$fail_str"; 
   }
 
   return;
