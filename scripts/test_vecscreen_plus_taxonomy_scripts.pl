@@ -154,12 +154,15 @@ printf("done.\n");
 ###################################
 printf("%-*s ... ", $command_width, "Testing from_vecscreen_to_summary.pl");
 ######################
-$cmd = $execs_H{"from_vecscreen_to_summary"} . " --keep --output_root $output_dir_and_root2 --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
+$cmd = $execs_H{"from_vecscreen_to_summary"} . " --output_root $output_dir_and_root2 --input_fasta $input_dir_and_root.input_sequence_file.fa --input_taxa " . $input_dir_and_root2 . "taxonomy_tree_wlevels.txt --verbose --combine_output > /dev/null"; # standard output is expected to be empty
 run_command($cmd, 0);
 @out_A = ("$output_dir_and_root2.output_combined_wtaxonomy.txt");
 check_many_files_exist_and_are_nonempty(\@out_A, "output");
 diff_files("$output_dir_and_root2.output_combined_wtaxonomy.txt", "$expected_dir_and_root.output_combined_wtaxonomy.txt");
 rm_files(\@out_A);
+
+#####################
+printf("done.\n");
 
 ######################################
 # Test compare_vector_matches_wtaxa.pl
