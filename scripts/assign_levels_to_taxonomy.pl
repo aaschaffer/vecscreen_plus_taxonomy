@@ -2,7 +2,7 @@
 # the first line of perl code has to be above
 #
 # Author: Alejandro Schaffer
-# Code to assign levels to nodes in the taxonomy tree
+# Code to assign levels to nodes in the taxonomy tree and recognize which taxids are descendants of Bacteria
 # The level of a node is one more than the number of edges 
 # between that node and the root (1); the root is at level 1.
 # Usage: assign_levels_to_taxonomy.pl \ 
@@ -25,6 +25,7 @@ my $SELF_COLUMN      = 0; #the column with the taxid
 my $PARENT_COLUMN    = 1; #the column with the parent
 my $RANK_COLUMN      = 2; #the column with the taxonomy rank
 my $LEVEL_COLUMN     = 3; #the column with the taxonomy level of this taxid (in output file only)
+my $BACTERIA_TAXON = 2; #taxon that is the root of all bacteria
 my $ARTIFICIAL_TAXON = 81077; # taxon to use for artificial sequences
 my $TAXONOMY_ROOT    = 1; # taxon to use as a default when no other taxon fits the situation
 
@@ -32,6 +33,7 @@ my $TAXONOMY_ROOT    = 1; # taxon to use as a default when no other taxon fits t
 my %taxonomy_parent_H; # maps a taxon to its parent
 my %taxonomy_rank_H;   # taxonomic formal rank
 my %taxonomy_level_H;  # maps a taxon to its level
+my %belongs_in_bacteria_H; #maps a taxon to 0 or 1
 my @taxids_A;          # array of all taxa
 my $i;                 # loop index
 my $num_taxids;        # number of taxids
@@ -64,7 +66,7 @@ my $usage    = "Usage: perl assign_levels_to_taxonomy.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.04";
+my $version       = "0.05";
 my $releasedate   = "July 2017";
 
 # set options in %opt_HH
@@ -105,7 +107,7 @@ assign_levels($num_taxids);
 # create output file
 open(OUTPUT, ">$output_file") or die "Cannot open 2 $output_file\n"; 
 for($i = 0; $i < $num_taxids; $i++) {
-    print OUTPUT "$taxids_A[$i]\t$taxonomy_parent_H{$taxids[$i]}\t$taxonomy_rank_H{$taxids[$i]}\t$taxonomy_level_H{$taxids[$i]}\n";
+    print OUTPUT "$taxids_A[$i]\t$taxonomy_parent_H{$taxids_A[$i]}\t$taxonomy_rank_H{$taxids_A[$i]}\t$taxonomy_level_H{$taxids_A[$i]}\t$belongs_in_bacteria_H{$taxids_A[$i]}\n";
 }
 close(OUTPUT);
 
@@ -149,8 +151,10 @@ sub process_taxonomy_tree {
     $taxids_A[$local_num_taxids] = $local_fields_A[$SELF_COLUMN];
     $taxonomy_parent_H{$local_fields_A[0]} = $local_fields_A[$PARENT_COLUMN];
     $taxonomy_rank_H{$local_fields_A[0]} = $local_fields_A[$RANK_COLUMN];
+    $belongs_in_bacteria_H{$local_fields_A[0]} = 0;
     $local_num_taxids++;
   }
+  $belongs_in_bacteria_H{$BACTERIA_TAXON} = 1;
   close(TAXONOMY);
   return($local_num_taxids);
 }
@@ -177,7 +181,7 @@ sub assign_levels {
   my $local_new_assignment; #did we assign a new value in this round
   
   for($local_i = 0; $local_i < $local_num_taxids; $local_i++) {
-    $taxonomy_level_H{$taxids[$local_i]} = 0;
+    $taxonomy_level_H{$taxids_A[$local_i]} = 0;
   }
   
   $taxonomy_level_H{$TAXONOMY_ROOT} = 1;
@@ -186,11 +190,14 @@ sub assign_levels {
     $local_new_assignment = 0;
     # print "In while loop\n";
     for($local_i = 0; $local_i < $local_num_taxids; $local_i++) {
-      # if (10239 == $taxids[$local_i]) {
-      # printf "Testing 10239 in for loop and its parent is $taxonomy_parent{$taxids[$local_i]} with level $taxonomy_level{$taxonomy_parent{$taxids[$local_i]}}\n"
+      # if (10239 == $taxids_A[$local_i]) {
+      # printf "Testing 10239 in for loop and its parent is $taxonomy_parent_H{$taxids_A[$local_i]} with level $taxonomy_level{$taxonomy_parent_H{$taxids_A[$local_i]}}\n"
       # }
-      if ((0 == $taxonomy_level_H{$taxids_A[$local_i]}) && (0 < $taxonomy_level_H{$taxonomy_parent_H{$taxids[$local_i]}})) {
-        $taxonomy_level_H{$taxids[$local_i]} = $taxonomy_level_H{$taxonomy_parent_H{$taxids[$local_i]}} + 1;
+      if ((0 == $taxonomy_level_H{$taxids_A[$local_i]}) && (0 < $taxonomy_level_H{$taxonomy_parent_H{$taxids_A[$local_i]}})) {
+        $taxonomy_level_H{$taxids_A[$local_i]} = $taxonomy_level_H{$taxonomy_parent_H{$taxids_A[$local_i]}} + 1;
+	if ($belongs_in_bacteria_H{$taxonomy_parent_H{$taxids_A[$local_i]}}) {
+	    $belongs_in_bacteria_H{$taxids_A[$local_i]} = 1;
+	}
         $local_new_assignment = 1;
       }
     }
