@@ -132,7 +132,7 @@ my $usage    = "Usage: perl parse_vecscreen.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.03";
+my $version       = "0.04";
 my $releasedate   = "July 2017";
 
 # set options in %opt_HH
