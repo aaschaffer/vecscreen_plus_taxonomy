@@ -105,7 +105,7 @@ source ~/.bashrc
 OR
 source ~/.cshrc
 
-If PERL5LIB was not already defined (you'll know if you get an error
+If PERL5LIB was not already defined (you will know, if you get an error
 message when you run the above 'source' command): 
 use instead
 export PERL5LIB="$VECPLUSDIR"
@@ -146,7 +146,7 @@ PATH/TO/VEC/PLUS/info-files/taxonomy_tree_wlevels.txt.
 > from_vecscreen_to_summary.pl --output_root mytest --input_fasta $VECPLUSDIR/test-files/test.input_sequence_file.fa --input_taxa $VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt --combine_output --verbose > mytest.out
 
 This command is contained in the file
-$VECPLUSDIR/scripts/sample_run.sh. In fact, it's better to just run
+$VECPLUSDIR/scripts/sample_run.sh. In fact, it is better to just run
 that shell script file, because it will also check that the expected
 output is correct:
 
@@ -164,7 +164,7 @@ mytest.output_combined_wtaxonomy.txt. This 11-column format is
 described below under 'Verbose output format (enabled with --verbose
 option): 11 columns'.
 
-The standard output of the script which describes briefly what the
+The output of the script to stdout, which describes briefly what the
 script is doing, is in the file mytest.out.
 
 The input sequence file
@@ -203,7 +203,8 @@ partly fixed at:
 The option --verbose determines how many columns of output are
 produced, as described in the OUTPUT section below. It does not cause
 more diagnostic output to be printed during the execution of the
-script.
+script. The extra columns are important for classifying some matches
+as true or false contamination.
 
 The option --keep determines whether the output file from running
 vecscreen within the script is kept (--keep used) or deleted (--keep
@@ -251,6 +252,9 @@ A dangling part is an unmatched segment of <= 25 nucleotides.
 
 This alternative 11-column format has been shown to be useful for some
 purposes, such as correcting vector-contaminated sequences in GenBank.
+Another circumstance in which the 11-column format
+is essential is if there is an input sequence that has a known species
+(not 1 in column 3) but do not have a known genus (1 in column 2).
 
 *********************************************************************
 **SAMPLE RUN, USAGE, AND OUTPUT OF compare_vector_matches_w_taxa.pl**
@@ -296,6 +300,16 @@ Column 12: the classification of the match
 Column 13: Most pertinent taxid of the vector interval 
 Column 14: Lowest common ancestor of column 2 and column 13
 
+The possible classifications in column 12 are currently:
+NO_DATA, TRUE_ARTIFICIAL, TRUE_ARTIFICIAL_MICROSAT, FALSE_AMR,
+FALSE_BIOLOGICAL, TRUE_BIOLOGICAL, TRUE_MICROSAT, LIKELY_FALSE,BACTERIAL.
+These are explained below.
+In practice, one mainly wants to distinguish between:
+{TRUE_ARTIFICIAL, TRUE_ARTIFICIAL_MICROSAT, TRUE_BIOLOGICAL, TRUE_MICROSAT} which are true contamination,
+versus
+{FALSE_AMR, FALSE_BIOLOGICAL, LIKELY_FALSE,BACTERIAL}, which are false contamination.
+
+
 In some cases, the classification TRUE_BIOLOGICAL may be too bold and
 this can be seen because Column 14 is not much higher up the taxonomy
 tree than column 13.  When this happens, the conservation of the
@@ -310,7 +324,7 @@ to one of the higher-level files*:
    tribe_level_exclusions.txt
 
 * Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
-  these.
+vector sources that should be propagated to a higher level of taxonomy.
 
 ***********
 **METHODS**
@@ -541,10 +555,12 @@ Column 1: taxid as an an integer
 Column 2: parent taxid as an an integer
 Column 3: rank (e.g., phylum) as a word
 
-Running assign_levels_to_taxonomy.pl will add a fourth column which is
-the level in the taxonomy tree, where the root has level 1 and each
-child taxid has a level one greater than the level of its parent
-taxid.
+Running assign_levels_to_taxonomy.pl will add
+-- a fourth column which is the level in the taxonomy tree, where
+   the root has level 1 and each child taxid has a level one greater
+   than the level of its parent taxid;
+-- a fifth column that is 1 if the node is a descendant of
+   Bacteria and 0 if not.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
