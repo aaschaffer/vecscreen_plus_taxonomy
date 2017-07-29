@@ -3,7 +3,7 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.03
+Version: 0.04
 July 2017
 ------------------
 README
@@ -24,9 +24,9 @@ BACKGROUND
 SETTING UP ENVIRONMENT VARIABLES
 SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl
 SAMPLE RUN, USAGE AND OUTPUT OF compare_vector_matches_w_taxa.pl
+METHODS
 TEST SCRIPT
 RELEVANT FILES
-METHODS
 CREATING THE TAXONOMY FILE
 
 **************
@@ -84,13 +84,13 @@ returns '/bin/bash', then update your .bashrc file, if it returns
 
 The 3 lines to add to your .bashrc file, ***but make sure that you
 replace PATH/TO/VEC/PLUS with the directory path to the directory
-created when you unpacked the vecscreen_plus_taxonomy-0.03.tar.gz
+created when you unpacked the vecscreen_plus_taxonomy-0.04.tar.gz
 tarball.
 
 -----------
 export VECPLUSDIR="PATH/TO/VEC/PLUS"
 export PERL5LIB="$VECPLUSDIR:$PERL5LIB"
-export PATH="$VECPLUSDIR:$PATH";
+export PATH="$VECPLUSDIR:$PATH"
 -----------
 
 The 3 lines to add to your .cshrc file:
@@ -108,9 +108,9 @@ source ~/.cshrc
 If PERL5LIB was not already defined (you'll know if you get an error
 message when you run the above 'source' command): 
 use instead
-export PERL5LIB="$EPNOPTDIR"
+export PERL5LIB="$VECPLUSDIR"
 for .bashrc, OR
-setenv PERL5LIB "$EPNOPTDIR"
+setenv PERL5LIB "$VECPLUSDIR"
 for .cshrc.
 at line 2 out of 3. 
 
@@ -138,9 +138,10 @@ following sample run should work.
 ****************************************************************
 **SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl**
 ****************************************************************
+
 Here is an example command that will run from_vecscreen_to_summary.pl
-on the fasta file myseqs.fa using the taxonomy file
-taxonomy_tree_wlevels.txt. 
+on the fasta file myseqs.fa using the taxonomy file included in 
+PATH/TO/VEC/PLUS/info-files/taxonomy_tree_wlevels.txt. 
 
 > from_vecscreen_to_summary.pl --output_root mytest --input_fasta $VECPLUSDIR/test-files/test.input_sequence_file.fa --input_taxa $VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt --combine_output --verbose > mytest.out
 
@@ -152,30 +153,32 @@ output is correct:
 > sh $VECPLUSDIR/scripts/sample_run.sh
 
 When you run the above 'sh' command, you should see output like this:
+--
 comparing expected output test-files/expected.output_combined_wtaxonomy.txt to observed output mytest.output_combined_wtaxonomy.txt
 SUCCESS: Files are identical
+--
 
 After running the above from_vecscreen_to_summary.pl command, the
 one-line per sequence output is in the file
 mytest.output_combined_wtaxonomy.txt. This 11-column format is
-described below: 'Verbose output format (enabled with --verbose
+described below under 'Verbose output format (enabled with --verbose
 option): 11 columns'.
 
 The standard output of the script which describes briefly what the
 script is doing, is in the file mytest.out.
 
-The sequence file ($VECPLUSDIR/test-files/test.input_sequence_file.fa)
-can be any nucleotide sequence file in FASTA format. 
+The input sequence file
+($VECPLUSDIR/test-files/test.input_sequence_file.fa) can be any
+nucleotide sequence file in FASTA format.
 
 The taxonomy file ($VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt)
 is a file in a special format that includes taxonomy information based
 on NCBI's taxonomy. This can either be created by the user from the
 NCBI taxonomy file, or the user can use the provided file
 taxonomy_tree_wlevels.txt which was created in March 2017. If you are
-using this in the first few months of 2017, the provided file above
-should be fine. After that, you should create a new up-to-date
-file. Instructions for doing that are provided below in the section
-CREATING THE TAXONOMY FILE.
+using this in 2017, the provided file above should be fine. After
+that, you should create a new up-to-date file. Instructions for doing
+that are provided below in the section CREATING THE TAXONOMY FILE.
 
 The options that can be provided to from_vecscreen_to_summary.pl are:
   --input_fasta <s> : REQUIRED: file name <s> with sequences in fasta format 
@@ -252,9 +255,12 @@ purposes, such as correcting vector-contaminated sequences in GenBank.
 *********************************************************************
 **SAMPLE RUN, USAGE, AND OUTPUT OF compare_vector_matches_w_taxa.pl**
 *********************************************************************
-The compare_vector_matches_w_taxa.pl script can only be run on the
-11-column output of from_vecscreen_to_summary.pl that is created when
-the --verbose option is used for that script.
+
+The compare_vector_matches_w_taxa.pl script takes as input the
+one-line per-sequence output file from
+from_vecscreen_to_summary.pl. That input file must be the 11-column
+output of from_vecscreen_to_summary.pl that is created when the
+--verbose option is used for that script.
 
 Here is the example usage of compare_vector_matches_wtaxa.pl:
 
@@ -269,15 +275,17 @@ compare_vector_matches_wtaxa.pl \
 --outfile my_output_final_step.txt
 
 This command is contained in the file
-$VECPLUSDIR/test-files/sample_compare_run.sh. In fact, it's better to
+$VECPLUSDIR/test-files/sample_compare_run.sh. As above, it's better to
 just run that shell script file, because it will also check that the
 expected output is correct:
 
 > sh $VECPLUSDIR/scripts/sample_compare_run.sh
 
 When you run the above 'sh' command, you should see output like this:
+--
 comparing expected output test-files/expected.output_final_step.txt to observed output my_outputfinal_step.txt
 SUCCESS: Files are identical
+--
 
 After running this compare_vector_matches_wtaxa.pl command, the file
 'my_output_final_step.txt' will include the output of
@@ -304,6 +312,31 @@ to one of the higher-level files*:
 * Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
   these.
 
+***********
+**METHODS**
+***********
+
+Given the input taxonomy file and an input sequence file in FASTA
+format, from_vecscreen_to_summary.pl will do the following:
+
+1) Run vecscreen on the input FASTA-formatted sequence file to
+   identify high-scoring matches to known vector sequences in UniVec
+   in the input sequence file.
+
+2) Parse the vecscreen output into two tab-delimited files for
+   internal and terminal matches by calling parse_vecscreen.pl.
+
+3) Optionally combine the two summary files into one by calling
+   combine_summaries.pl.
+
+4) Add taxonomy information to the vecscreen output by calling srcchk
+   and add_taxonomy.pl.
+
+compare_vector_matches_wtaxa.pl uses the six sets of data files listed
+to classify each vecscreen match.  This program is separate because an
+in-house usage needed somewhat different I/O specifications to fit
+into an existing software framework.
+
 ***************
 **TEST SCRIPT**
 ***************
@@ -325,19 +358,23 @@ Testing compare_vector_matches_wtaxa.pl  ... done.
 # SUCCESS
 --
 
-If not, make sure that you've set up your environment variable
-$VECPLUSDIR correctly as explained above in the 'SETTING UP
-ENVIRONMENT VARIABLES' section. If you still have problems, email: 
-schaffer@ncbi.nlm.nih.gov.
+If you do not see this output, make sure that you've set up your
+environment variable $VECPLUSDIR correctly as explained above in the
+'SETTING UP ENVIRONMENT VARIABLES' section. If you still have
+problems, email schaffer@ncbi.nlm.nih.gov.
 
 ******************
 **RELEVANT FILES**
 ******************
+
 Several executable files are required for from_vecscreen_to_summary.pl
-to work. Two of these executables were developed by others and must be
-downloaded and installed separately outside of NCBI. All of these
-files are included in the FIXME tarball, so you do not need to create or
-move any files in order to get from_vecscreen_to_summary.pl to work.
+and compare_vector_matches_wtaxa.pl to work. Two of these executables
+were developed by others and must be downloaded and installed
+separately outside of NCBI. All of these files are included in the
+vecscreen_plus_taxonomy-0.04.tar.gz tarball, so you do not need to
+create or move any files in order to get from_vecscreen_to_summary.pl
+to work. After unpacking the tarball, these files will be in the
+PATH/TO/VEC/PLUS/scripts directory.
 
 The first two files are NCBI executable programs that were not authored by
 Alejandro Schaffer:
@@ -348,11 +385,8 @@ Alejandro Schaffer:
    Within NCBI, vecscreen can be found at
    /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen
 
-   To add this directory to your path execute this command:
+   At NCBI, to add this directory to your path execute this command: 
    > ln -s /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen .
-
-   External users can download vecscreen here:
-   TODO
 
 2. srcchk 
    Determines the taxonomy of input sequences, with respect the NCBI
@@ -361,55 +395,74 @@ Alejandro Schaffer:
    Within NCBI, srcchk can be found at
    /netopt/ncbi_tools64/bin/srcchk
 
-   To add this directory to your path execute this command:
+   At NCBI, to add this directory to your path execute this command:
    > ln -s /netopt/ncbi_tools64/bin/srcchk .
 
-   External users can download srcchk here:
-   TODO
-
-The next 6 files were included with this software distribution: 
+The next 6 files were authored by Alejandro Schaffer:
 
 3. from_vecscreen_to_summary.pl 
    This is the main script that coordinates the work by calling the
    other executables listed below.
 
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/from_vecscreen_to_summary.pl
-
 4. parse_vecscreen.pl
    Auxiliary script called by from_vecscreen_to_summary.pl that parses
    the vecscreen output.
    
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/parse_vecscreen.pl
-
 5. combine_summaries.pl
    Auxiliary script called by from_vecscreen_to_summary.pl that
    combines two different output formats of parse_vecscreen.pl
 
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/combine_summaries.pl
-
 6. add_taxonomy.pl
    Auxiliary script called by from_vecscreen_to_summary.pl that adds
    taxonomy information to the output of parse_vecscreen.pl.
-
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/add_taxonomy.pl
 
 7. assign_levels_to_taxonomy.pl
    Independent script that is used to create a taxonomy file from the
    NCBI taxonomy. The file produced by assign_levels_to_taxonomy.pl is
    required input to from_vecscreen_to_summary.pl.
 
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9a/assign_levels_to_taxonomy.pl
+8. compare_vector_matches_wtaxa.pl
+   Program to classify vecscreen matches that have already been parsed
+   with from_vecscreen_to_summary.pl. Matches can be classified as:
 
+ A. NO_DATA:           there is no data about the source of the vector
+                       segment in the match.
 
-8. epn-options.pm
-   A perl module authored by Eric Nawrocki to handle command line
-   options.
+ B. TRUE_ARTIFICIAL:   the vector segment matched is an ARTIFICIAL
+                       sequence and hence the match is TRUE
+                       contamination.
 
-   /panfs/pan1.be-md.ncbi.nlm.nih.gov/dnaorg/2015.09/vector_screening/test9b/epn-options.pm
+ C. TRUE_ARTIFICIAL_MICROSAT: the vector segment matched is an
+                              ARTIFICIAL sequence and hence the match
+                              is TRUE contamination and the vector
+                              contains a microsatellite.
+
+ D. FALSE_AMR:         the query sequence is bacterial; the vector
+                       segment matches a known sequence that confers
+                       anti-microbial resistance and these can often
+                       be transferred horizontally between bacteria
+                       that may be taxonomically distant.
+
+ E. FALSE_BIOLOGICAL:  the subject's biological origin is known and
+                       its taxid is deemed close enough to that of the
+                       query, so that the match is not contamination.
+
+ F. TRUE_BIOLOGICAL :  the query and the matching subject originate from
+                       taxa that are too far apart for the vector to occur
+                       plausibly in the query.
+
+ G. TRUE_MICROSAT :    the query and the matching subject originate from
+                       taxa that are too far apart for the vector to
+                       occur plausibly in the query, and the vector
+                       contains a microsatellite.
+
+ H. LIKE_FALSE_BACTERIAL: the query is from uncultured bacteria and
+                          the matching subject isfrom bacteria
 
 Additionally, several sets of data files are required for
 compare_vector_matches_wtaxa.pl to work. These were all included with
-this software distribution. 
+this software distribution. After unpacking the tarball,
+these files will be in the PATH/TO/VEC/PLUS/info-files directory.
 
 1. taxonomy_tree_wlevels.txt 
    A compact form of NCBI's taxonomy tree with added fields to
@@ -452,76 +505,19 @@ this software distribution.
    match to these vectors are classified specially as TRUE_MICROSAT or
    TRUE_ARTIFICAL_MICROSAT
 
-6. compare_vector_matches_wtaxa.pl
+Addtionally, the files in the 'test-files' directory created when
+unpacking the tarball are all used by the
+scripts/test_vector_plus_taxonomy.pl script for testing that your
+installation and setup is working properly. 
 
-   Program to classify vecscreen matches that have already been parsed
-   with from_vecscreen_to_summary.pl. Matches can be classified as:
-
- A. NO_DATA:           there is no data about the source of the vector
-                       segment in the match.
-
- B. TRUE_ARTIFICIAL:   the vector segment matched is an ARTIFICIAL
-                       sequence and hence the match is TRUE
-                       contamination.
-
- C. TRUE_ARTIFICIAL_MICROSAT: the vector segment matched is an
-                              ARTIFICIAL sequence and hence the match
-                              is TRUE contamination and the vector
-                              contains a microsatellite.
-
- D. FALSE_AMR:         the query sequence is bacterial; the vector
-                       segment matches a known sequence that confers
-                       anti-microbial resistance and these can often
-                       be transferred horizontally between bacteria
-                       that may be taxonomically distant.
-
- E. FALSE_BIOLOGICAL:  the subject's biological origin is known and
-                       its taxid is deemed close enough to that of the
-                       query, so that the match is not contamination.
-
- F. TRUE_BIOLOGICAL :  the query and the matching subject originate from
-                       taxa that are too far apart for the vector to occur
-                       plausibly in the query.
-
- G. TRUE_MICROSAT :    the query and the matching subject originate from
-                       taxa that are too far apart for the vector to
-                       occur plausibly in the query, and the vector
-                       contains a microsatellite.
-
- H. LIKE_FALSE_BACTERIAL: the query is from uncultured bacteria and
-                          the matching subject isfrom bacteria
-
-7. sample_compare_run
-   Example usage of compare_vector_matches_wtaxa.pl. 
-
-***********
-**METHODS**
-***********
-
-Given the input taxonomy file and an input sequence file in FASTA
-format, from_vecscreen_to_summary.pl will do the following:
-
-1) Run vecscreen on the input FASTA-formatted sequence file to
-   identify high-scoring matches to known vector sequences in UniVec
-   in the input sequence file.
-
-2) Parse the vecscreen output into two tab-delimited files for
-   internal and terminal matches by calling parse_vecscreen.pl.
-
-3) Optionally combine the two summary files into one by calling
-   combine_summaries.pl.
-
-4) Add taxonomy information to the vecscreen output by calling srcchk
-   and add_taxonomy.pl.
-
-compare_vector_matches_wtaxa.pl uses the six sets of data files listed
-to classify each vecscreen match.  This program is separate because an
-in-house usage needed somewhat different I/O specifications to fit
-into an existing software framework.
+Finally, the file epn-options.pm is a perl module authored 
+by Eric Nawrocki to handle command line options. It will be in the
+top-level PATH/TO/VEC/PLUS directory after unpacking the tarball.
 
 ******************************
 **CREATING THE TAXONOMY FILE**
 ******************************
+
 This section describes how to create the taxonomy input file (passed
 in to from_vecscreen_to_summary.pl with the --input_taxa <s> option)
 using the NCBI taxonomy file.
@@ -554,6 +550,3 @@ taxid.
 Send any comments or questions to Alejandro Schaffer
 (schaffer@ncbi.nlm.nih.gov)
 
-New information about vector biological sources and cases in which
-known genus-level sources should be propagated to a higher level are
-especially welcome.
