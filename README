@@ -394,7 +394,7 @@ PATH/TO/VEC/PLUS/scripts directory.
 The first two files are NCBI executable programs that were not authored by
 Alejandro Schaffer:
 
-1. vecscreen 
+1. vecscreen and associated UniVec database
    Identifies vector contamination in input sequences.
 
    Within NCBI, vecscreen can be found at
@@ -409,6 +409,14 @@ Alejandro Schaffer:
    Run
    gunzip vecscreen.gz
    and make sure that vecscreen is on the execution path
+
+   vecscreen requires that the BLASTable database UniVec be accessible.
+   For simplicity, we can define "accessible" as in the same directory as vecscreen.
+   The UniVec database is represented (for purposes of vecscreen) in the three files
+   scripts/UniVec.nhr
+   scripts/UniVec.nin
+   scripts/UniVec.nsq
+   Do not try to edit the three UniVec files under any circumstances.
 
    See also the section COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
 
