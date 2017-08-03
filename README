@@ -28,6 +28,7 @@ METHODS
 TEST SCRIPT
 RELEVANT FILES
 CREATING THE TAXONOMY FILE
+COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
 
 **************
 **BACKGROUND**
@@ -402,6 +403,15 @@ Alejandro Schaffer:
    At NCBI, to add this directory to your path execute this command: 
    > ln -s /netopt/ncbi_tools64/c++.stable/ReleaseMT/bin/vecscreen .
 
+   For users outside NCBI, we provide a gzipped executable of vecscreen
+   for 64-bit Linux computers in
+   scripts/vecscreen.gz
+   Run
+   gunzip vecscreen.gz
+   and make sure that vecscreen is on the execution path
+
+   See also the section COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
+
 2. srcchk 
    Determines the taxonomy of input sequences, with respect the NCBI
    taxonomy tree.
@@ -411,6 +421,15 @@ Alejandro Schaffer:
 
    At NCBI, to add this directory to your path execute this command:
    > ln -s /netopt/ncbi_tools64/bin/srcchk .
+
+   For users outside NCBI, we provide a gzipped executable of srcchk
+   for 64-bit Linux computers in
+   scripts/srcchk.gz
+   Run
+   gunzip srcchk.gz
+   and make sure that srcchk is on the execution path
+
+   See also the section COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
 
 The next 6 files were authored by Alejandro Schaffer:
 
@@ -561,6 +580,56 @@ Running assign_levels_to_taxonomy.pl will add
    than the level of its parent taxid;
 -- a fifth column that is 1 if the node is a descendant of
    Bacteria and 0 if not.
+
+******************************
+**COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH**
+******************************
+
+We provide gzipped executables of vecscreen and srcchk for 64-bit Linux.
+These have been tested on a non-NCBI computer, but it is not possible
+to prove that they work on all 64-bit Linux computers that are sufficiently
+up to date. In this context, sufficiently up to date means that all libraries
+associated with gcc version 4.8 or higher are installed. The executables
+provided were compiled with gcc version 4.91 because that was the least
+recent version of gcc available among the versions >= 4.8.
+
+srcchk and vecscreen are part of the NCBI C++ toolkit, which can
+be downloaded by following a long from
+https://ncbi.github.io/cxx-toolkit/pages/ch_getcode_svn#ch_getcode_svn.ftp_download.
+The current version is 18.0.0
+So, the retrieved file will be named
+ncbi_cxx--18_0_0.tar.gz
+
+Run
+gunzip ncbi_cxx--18_0_0.tar.gz
+tar xvf ncbi_cxx--18_0_0.tar
+cd ncbi_cxx--18_0_0
+
+In case the user wants to compile vecscreen and srcchk from scratch, we found
+that either of the following sets of steps works. It is possible that on some
+other computers one method will work and the other not, so we provide both
+methods. Let the token <GCC version> represent the gcc version number without
+the decimal points. For example, on the computer we used, the token would be 491.
+
+At the end of either method, the executables for srcchk and vecscreen
+can be found in the subirectory (of ncbi_cxx--18_0_0) called
+GCC<GCC version>-DebugMT64/bin.
+
+Method 1:
+
+1) ./configure --without-gui --without-internal --without-boost
+
+2) cd GCC<GCC version number>-Debug/build
+
+3) make -C build -f Makefile.flat all_files
+
+Method 2:
+
+1) ./configure --without-gui --without-internal --without-boost --with-flat-makefile
+
+2) cd GCC<GCC version number>-Debug/build
+ 
+3) make -C build -f Makefile.flat app/ 
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
