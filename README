@@ -647,7 +647,7 @@ GCC<GCC version>-DebugMT64/bin.
 
 Method 1:
 
-1) ./configure --without-gui --without-internal --without-boost
+1) ./configure --without-gui --without-internal --without-boost --without-gnutls --with-bin-release
 
 2) cd GCC<GCC version>-Debug/build
 
@@ -655,9 +655,9 @@ Method 1:
 
 Method 2:
 
-1) ./configure --without-gui --without-internal --without-boost --with-flat-makefile
+1) ./configure --without-gui --without-internal --without-boost --without-gnutls --with-bin-release --with-flat-makefile
 
-2) cd GCC<GCC version>-Debug/build
+2) cd GCC<GCC version>-Debug
  
 3) make -C build -f Makefile.flat app/ 
 
