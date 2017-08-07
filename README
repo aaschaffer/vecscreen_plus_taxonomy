@@ -18,6 +18,10 @@ and
 that can be used to run vecscreen and parse its outputs, including
 taxonomy information.
 
+There is a related repository 
+
+github: https://github.com/aaschaffer/generate_vecscreen_candidates.git
+
 Outline of this file:
 
 BACKGROUND
@@ -69,6 +73,20 @@ More information about vecscreen can be found at
 https://www.ncbi.nlm.nih.gov/tools/vecscreen/about/
 In this document, 'vecscreen' refers to the command-line version, not
 the Web page version.
+
+The programs and data in this vecscreen_plus_taxonomy repository are
+for prospective analysis of nucleotide sequences, especially
+sequences that one might want to submit to GenBank.
+
+The related repository 
+
+github: https://github.com/aaschaffer/generate_vecscreen_candidates.git
+
+does a preprocessing step relevant to only retrospective analysis of
+sequences already in a database set up for BLAST, such as the non-redundant
+(nr) database in GenBank. In retrospective analysis, one wants to start
+by searching the database for sequences that may be expected to have vecscreen
+matches, so as to avoid running vecscreen on the entire database. 
 
 ************************************
 **SETTING UP ENVIRONMENT VARIABLES**
