@@ -91,14 +91,14 @@ tarball.
 -----------
 export VECPLUSDIR="PATH/TO/VEC/PLUS"
 export PERL5LIB="$VECPLUSDIR:$PERL5LIB"
-export PATH="$VECPLUSDIR:$PATH"
+export PATH="$VECPLUSDIR/scripts:$PATH"
 -----------
 
 The 3 lines to add to your .cshrc file:
 -----------
 setenv SENSORDIR "PATH/TO/VEC/PLUS"
 setenv PERL5LIB "$VECPLUSDIR":"$PERL5LIB"
-setenv PATH "$VECPLUSDIR":"$PATH"
+setenv PATH "$VECPLUSDIR/scripts":"$PATH"
 -----------
 
 Then, after adding those 3 lines, execute this command:
@@ -129,8 +129,8 @@ string that begins with the same path:
 PATH/TO/VEC/PLUS
 
 The third echo command should return a (potentially longer) string
-that begins with the same path:
-PATH/TO/VEC/PLUS
+that begins with:
+PATH/TO/VEC/PLUS/scripts
 
 If that is not the case, please email Alejandro Schaffer
 (schaffer@ncbi.nlm.nih.gov). If you do see the expected output, the
@@ -408,7 +408,9 @@ Alejandro Schaffer:
    scripts/vecscreen.gz
    Run
    gunzip vecscreen.gz
-   and make sure that vecscreen is on the execution path
+
+   and make sure that vecscreen is on the execution path (which it should
+   be if you followed the steps above in SETTING UP ENVIRONMENT VARIABLES)
 
    vecscreen requires that the BLASTable database UniVec be accessible.
    For simplicity, we can define "accessible" as in the same directory as vecscreen.
@@ -435,7 +437,9 @@ Alejandro Schaffer:
    scripts/srcchk.gz
    Run
    gunzip srcchk.gz
-   and make sure that srcchk is on the execution path
+
+   and make sure that srcchk is on the execution path (which it should
+   be if you followed the steps above in SETTING UP ENVIRONMENT VARIABLES)
 
    See also the section COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
 
