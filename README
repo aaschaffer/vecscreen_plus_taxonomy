@@ -94,32 +94,33 @@ matches, so as to avoid running vecscreen on the entire database.
 
 Before you can run from_vecscreen_to_summary.pl or
 compare_vector_matches_wtaxa.pl you will need to update some of your
-command line variables. To do this, add the following three lines to
+environment variables. To do this, add the following four lines to
 your .bashrc file (if you use bash shell) or .cshrc file (if you use C
 shell or tcsh). The .bashrc or .cshrc file will be in your home
 directory. To determine what shell you use type 'echo $SHELL', if it
 returns '/bin/bash', then update your .bashrc file, if it returns
 '/bin/csh' or '/bin/tcsh' then update your .cshrc file.
 
-The 3 lines to add to your .bashrc file, ***but make sure that you
+The 4 lines to add to your .bashrc file, ***but make sure that you
 replace PATH/TO/VEC/PLUS with the directory path to the directory
-created when you unpacked the vecscreen_plus_taxonomy-0.04.tar.gz
-tarball.
+created when you cloned the vecscreen_plus_taxonomy github repository.
 
 -----------
 export VECPLUSDIR="PATH/TO/VEC/PLUS"
 export PERL5LIB="$VECPLUSDIR:$PERL5LIB"
 export PATH="$VECPLUSDIR/scripts:$PATH"
+export BLASTDB="$VECPLUSDIR/univec-files:$BLASTDB"
 -----------
 
-The 3 lines to add to your .cshrc file:
+The 4 lines to add to your .cshrc file:
 -----------
 setenv SENSORDIR "PATH/TO/VEC/PLUS"
 setenv PERL5LIB "$VECPLUSDIR":"$PERL5LIB"
 setenv PATH "$VECPLUSDIR/scripts":"$PATH"
+setenv BLASTDB "$VECPLUSDIR/univec-files":"$BLASTDB"
 -----------
 
-Then, after adding those 3 lines, execute this command:
+Then, after adding those 4 lines, execute this command:
 source ~/.bashrc
 OR
 source ~/.cshrc
@@ -131,13 +132,23 @@ export PERL5LIB="$VECPLUSDIR"
 for .bashrc, OR
 setenv PERL5LIB "$VECPLUSDIR"
 for .cshrc.
-at line 2 out of 3. 
+at line 2 out of 4. 
+
+Similarly, if BLASTDB was not already defined (you will know, if you
+get an error message when you run the above 'source' command): 
+use instead
+export BLASTDB="$VECPLUSDIR/univec-files"
+for .bashrc, OR
+setenv BLASTDB "$VECPLUSDIR/univec-files"
+for .cshrc.
+at line 4 out of 4. 
 
 To check that your environment variables are properly set up do the
 following three commands:
 echo $VECPLUSDIR
 echo $PERL5LIB
 echo $PATH
+echo $BLASTDB
 
 The first command should return only:
 PATH/TO/VEC/PLUS
@@ -150,9 +161,27 @@ The third echo command should return a (potentially longer) string
 that begins with:
 PATH/TO/VEC/PLUS/scripts
 
+The fourth echo command should return a (potentially longer) string
+that begins with:
+PATH/TO/VEC/PLUS/univec-files
+
 If that is not the case, please email Alejandro Schaffer
 (schaffer@ncbi.nlm.nih.gov). If you do see the expected output, the
 following sample run should work.
+
+Finally, you will need to gunzip two exectuable files in
+PATH/TO/VEC/PLUS/scripts, and make the files executable (in case they
+are not already executable). Perform the following commands:
+
+> cd $VECPLUSDIR/scripts
+> gunzip vecscreen.gz
+> gunzip srcchk.gz
+> chmod +x vecscreen
+> chmod +x srcchk
+
+After thisk, you should be able to successfully complete the sample
+runs below, as well as the test script in the TEST SCRIPT section
+below. 
 
 ****************************************************************
 **SAMPLE RUN, USAGE AND OUTPUT OF from_vecscreen_to_summary.pl**
@@ -426,16 +455,22 @@ Alejandro Schaffer:
    scripts/vecscreen.gz
    Run
    gunzip vecscreen.gz
+   chmod +x vecscreen
 
    and make sure that vecscreen is on the execution path (which it should
    be if you followed the steps above in SETTING UP ENVIRONMENT VARIABLES)
 
-   vecscreen requires that the BLASTable database UniVec be accessible.
-   For simplicity, we can define "accessible" as in the same directory as vecscreen.
-   The UniVec database is represented (for purposes of vecscreen) in the three files
-   scripts/UniVec.nhr
-   scripts/UniVec.nin
-   scripts/UniVec.nsq
+   vecscreen requires that the BLASTable database UniVec be
+   accessible.  This means that these files must be in a directory
+   that is contained in your $BLASTDB environment variable. If you
+   followed the instructions in the SETTING UP ENVIRONMENT VARIABLES
+   section above, you have already added the appropriate directory
+   (PATH/TO/VEC/PLUS/univec-files) to $BLASTDB.  The UniVec database
+   is represented (for purposes of vecscreen) in the three files:
+
+   univec-files/UniVec.nhr
+   univec-files/UniVec.nin
+   univec-files/UniVec.nsq
    Do not try to edit the three UniVec files under any circumstances.
 
    See also the section COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
@@ -455,6 +490,7 @@ Alejandro Schaffer:
    scripts/srcchk.gz
    Run
    gunzip srcchk.gz
+   chmod +x srcchk
 
    and make sure that srcchk is on the execution path (which it should
    be if you followed the steps above in SETTING UP ENVIRONMENT VARIABLES)
@@ -611,9 +647,9 @@ Running assign_levels_to_taxonomy.pl will add
 -- a fifth column that is 1 if the node is a descendant of
    Bacteria and 0 if not.
 
-******************************
+*********************************************************
 **COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH**
-******************************
+*********************************************************
 
 We provide gzipped executables of vecscreen and srcchk for 64-bit Linux.
 These have been tested on a non-NCBI computer, but it is not possible
@@ -624,9 +660,12 @@ provided were compiled with gcc version 4.91 because that was the least
 recent version of gcc available among the versions >= 4.8.
 
 srcchk and vecscreen are part of the NCBI C++ toolkit, which can
-be downloaded by following a long from
-https://ncbi.github.io/cxx-toolkit/pages/ch_getcode_svn#ch_getcode_svn.ftp_download.
-The current version is 18.0.0
+be downloaded at the time of writing from
+
+ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--18_0_0.tar.gz
+
+The current version is 18.0.0, but when you download it it may be
+different. Modify the above address as necessary to get the current version.
 So, the retrieved file will be named
 ncbi_cxx--18_0_0.tar.gz
 
@@ -647,7 +686,7 @@ GCC<GCC version>-DebugMT64/bin.
 
 Method 1:
 
-1) ./configure --without-gui --without-internal --without-boost --without-gnutls --with-bin-release
+1) ./configure --without-gui --without-internal --without-boost --with-bin-release
 
 2) cd GCC<GCC version>-Debug/build
 
@@ -655,7 +694,7 @@ Method 1:
 
 Method 2:
 
-1) ./configure --without-gui --without-internal --without-boost --without-gnutls --with-bin-release --with-flat-makefile
+1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
 
 2) cd GCC<GCC version>-Debug
  
