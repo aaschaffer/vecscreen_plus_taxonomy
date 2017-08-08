@@ -686,9 +686,9 @@ GCC<GCC version>-DebugMT64/bin.
 
 Method 1:
 
-1) ./configure --without-gui --without-internal --without-boost --with-bin-release
+1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
 
-2) cd GCC<GCC version>-Debug/build
+2) cd GCC<GCC version>-Debug
 
 3) make -C build -f Makefile.flat all_files
 
