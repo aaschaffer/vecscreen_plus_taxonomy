@@ -652,7 +652,7 @@ Running assign_levels_to_taxonomy.pl will add
 *********************************************************
 
 We provide gzipped executables of vecscreen and srcchk for 64-bit Linux.
-These have been tested on a non-NCBI computer, but it is not possible
+These have been tested on two non-NCBI computers, but it is not possible
 to prove that they work on all 64-bit Linux computers that are sufficiently
 up to date. In this context, sufficiently up to date means that all libraries
 associated with gcc version 4.8 or higher are installed. The executables
@@ -664,27 +664,28 @@ be downloaded at the time of writing from
 
 ftp://ftp.ncbi.nih.gov/toolbox/ncbi_tools++/CURRENT/ncbi_cxx--18_0_0.tar.gz
 
-The current version is 18.0.0, but when you download it it may be
-different. Modify the above address as necessary to get the current version.
-So, the retrieved file will be named
-ncbi_cxx--18_0_0.tar.gz
+The current version is 18.0.0, but the version may increase in the future.
+Modify the above address as necessary to get the current version.
+At this time, the retrieved file will be named ncbi_cxx--18_0_0.tar.gz.
+If the version retrieved is higher, replace all occurrences of
+18_0_0 below accordingly.
 
 Run
 gunzip ncbi_cxx--18_0_0.tar.gz
 tar xvf ncbi_cxx--18_0_0.tar
 cd ncbi_cxx--18_0_0
 
-In case the user wants to compile vecscreen and srcchk from scratch, we found
-that either of the following sets of steps works. It is possible that on some
-other computers one method will work and the other not, so we provide both
-methods. Let the token <GCC version> represent the gcc version number without
-the decimal points. For example, on the computer we used, the token would be 491.
+In case the user wants to compile vecscreen and srcchk from scratch,
+we found that the following sets of steps works on Linux, but we
+caution that compiling the NCBI C++ toolkit is a moving target and
+instructions may need to change in the future. Let the token <GCC
+version> represent the gcc version number without the decimal
+points. For example, on the computer we used, the token would be 491.
 
-At the end of either method, the executables for srcchk and vecscreen
-can be found in the subirectory (of ncbi_cxx--18_0_0) called
-GCC<GCC version>-DebugMT64/bin.
+After the following three commands are run, the executables for srcchk
+and vecscreen should be found in the subirectory (of ncbi_cxx--18_0_0)
+called GCC<GCC version>-DebugMT64/bin.
 
-Method 1:
 
 1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
 
@@ -692,13 +693,10 @@ Method 1:
 
 3) make -C build -f Makefile.flat all_files
 
-Method 2:
-
-1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
-
-2) cd GCC<GCC version>-Debug
- 
-3) make -C build -f Makefile.flat app/ 
+In our experience, on some systems, we found it necessary to run step
+3) multiple times.  In other words, if one attempt at step 3 does not
+result in the executable files srcchk and vecscreen being compiled,
+then run step 3 again.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
