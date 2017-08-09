@@ -3,8 +3,8 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.04
-July 2017
+Version: 0.05
+August 2017
 ------------------
 README
 
@@ -433,9 +433,9 @@ Several executable files are required for from_vecscreen_to_summary.pl
 and compare_vector_matches_wtaxa.pl to work. Two of these executables
 were developed by others and must be downloaded and installed
 separately outside of NCBI. All of these files are included in the
-vecscreen_plus_taxonomy-0.04.tar.gz tarball, so you do not need to
+vecscreen_plus_taxonomy github repository, so you do not need to
 create or move any files in order to get from_vecscreen_to_summary.pl
-to work. After unpacking the tarball, these files will be in the
+to work. After cloning the git repository, these files will be in the
 PATH/TO/VEC/PLUS/scripts directory.
 
 The first two files are NCBI executable programs that were not authored by
@@ -560,8 +560,8 @@ The next 6 files were authored by Alejandro Schaffer:
 
 Additionally, several sets of data files are required for
 compare_vector_matches_wtaxa.pl to work. These were all included with
-this software distribution. After unpacking the tarball,
-these files will be in the PATH/TO/VEC/PLUS/info-files directory.
+this software distribution. After cloning the github repository, these
+files will be in the PATH/TO/VEC/PLUS/info-files directory.
 
 1. taxonomy_tree_wlevels.txt 
    A compact form of NCBI's taxonomy tree with added fields to
@@ -605,13 +605,13 @@ these files will be in the PATH/TO/VEC/PLUS/info-files directory.
    TRUE_ARTIFICAL_MICROSAT
 
 Addtionally, the files in the 'test-files' directory created when
-unpacking the tarball are all used by the
+cloning the github repository all used by the
 scripts/test_vector_plus_taxonomy.pl script for testing that your
-installation and setup is working properly. 
+installation and setup is working properly.
 
 Finally, the file epn-options.pm is a perl module authored 
 by Eric Nawrocki to handle command line options. It will be in the
-top-level PATH/TO/VEC/PLUS directory after unpacking the tarball.
+top-level PATH/TO/VEC/PLUS directory after cloning the repository.
 
 ******************************
 **CREATING THE TAXONOMY FILE**
