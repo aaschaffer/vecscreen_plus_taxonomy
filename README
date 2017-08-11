@@ -3,7 +3,7 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.05
+Version: 0.06
 August 2017
 ------------------
 README
@@ -682,10 +682,15 @@ instructions may need to change in the future. Let the token <GCC
 version> represent the gcc version number without the decimal
 points. For example, on the computer we used, the token would be 491.
 
-After the following three commands are run, the executables for srcchk
+After the following four commands are run, the executables for srcchk
 and vecscreen should be found in the subirectory (of ncbi_cxx--18_0_0)
-called GCC<GCC version>-DebugMT64/bin.
+called GCC<GCC version>-DebugMT64/bin. 
 
+The commands below will create files that collectively take about 25Gb
+of disk space (as of current version). After the build is complete,
+you can copy only the srcchk and vecscreen binaries from GCC<GCC
+version>-DebugMT64/bin to PATH/TO/VEC/PLUS, or anywhere else you want,
+and delete the rest of the files, if desired.
 
 1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
 
@@ -693,10 +698,7 @@ called GCC<GCC version>-DebugMT64/bin.
 
 3) make -C build -f Makefile.flat all_files
 
-In our experience, on some systems, we found it necessary to run step
-3) multiple times.  In other words, if one attempt at step 3 does not
-result in the executable files srcchk and vecscreen being compiled,
-then run step 3 again.
+4) make -C build -f Makefile.flat app/
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
