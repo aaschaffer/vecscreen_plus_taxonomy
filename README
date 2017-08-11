@@ -684,8 +684,13 @@ points. For example, on the computer we used, the token would be 491.
 
 After the following four commands are run, the executables for srcchk
 and vecscreen should be found in the subirectory (of ncbi_cxx--18_0_0)
-called GCC<GCC version>-DebugMT64/bin.
+called GCC<GCC version>-DebugMT64/bin. 
 
+The commands below will create files that collectively take about 25Gb
+of disk space (as of current version). After the build is complete,
+you can copy only the srcchk and vecscreen binaries from GCC<GCC
+version>-DebugMT64/bin to PATH/TO/VEC/PLUS, or anywhere else you want,
+and delete the rest of the files, if desired.
 
 1) ./configure --without-gui --without-internal --without-boost --with-bin-release --with-flat-makefile
 
