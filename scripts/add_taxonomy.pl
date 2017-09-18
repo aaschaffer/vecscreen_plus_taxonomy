@@ -104,8 +104,8 @@ my $usage    = "Usage: perl add_taxonomy.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.06";
-my $releasedate   = "Aug 2017";
+my $version       = "0.07";
+my $releasedate   = "Sept 2017";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
