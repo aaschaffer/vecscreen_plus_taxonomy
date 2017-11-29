@@ -211,8 +211,8 @@ my $usage    = "Usage: perl compare_vector_matches_wtaxa.pl";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.07";
-my $releasedate   = "Sept 2017";
+my $version       = "0.08";
+my $releasedate   = "Nov 2017";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
