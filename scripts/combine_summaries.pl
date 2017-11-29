@@ -91,7 +91,7 @@ my $usage    = "Usage: combine_summaries.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.08";
+my $version       = "0.09";
 my $releasedate   = "Nov 2017";
 
 # set options in %opt_HH
