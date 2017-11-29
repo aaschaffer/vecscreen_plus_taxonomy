@@ -3,6 +3,7 @@ uv|AB095955.1:534-626	1	48	91347	Enterobacterales
 uv|AB095955.1:6160-6250	1	49	91347	Enterobacterales
 uv|AF061930.1:1707-1804	1	38	91347	Enterobacterales
 uv|AF062080.1:1240-1337	1	38	91347	Enterobacterales
+uv|AF102576.1:1-3461	24	3209	9443	Primates
 uv|AF123770.1:10090-10253	1	49	91347	Enterobacterales
 uv|AF129072.1:907-3477	1	49	91347	Enterobacterales
 uv|AF133437.1:1-78	8	40	91347	Enterobacterales
@@ -19,7 +20,7 @@ uv|AF327894.1:1746-1902	56	89	91347	Enterobacterales
 uv|AF519766.1:2372-2991	35	81	91347	Enterobacterales
 uv|AY597273.1:1580-1671	44	92	91347	Enterobacterales
 uv|AY643800.3:106-390	168	201	91347	Enterobacterales
-uv|D13251.1:5615-5709	1	187	91347	Enterobacterales
+uv|D13251.1:3780-4015	1	187	91347	Enterobacterales
 uv|D85525.1:1325-1442	1	38	91347	Enterobacterales
 uv|DQ092493.1:2022-2077	1	40	91347	Enterobacterales
 uv|DQ092493.1:5324-5419	1	96	91347	Enterobacterales
@@ -28,6 +29,7 @@ uv|DQ092493.1:6531-6629	1	99	91347	Enterobacterales
 uv|DQ092493.1:7097-7193	1	97	91347	Enterobacterales
 uv|DQ092493.1:7260-7355	1	96	91347	Enterobacterales
 uv|DQ092493.1:8086-8184	1	99	91347	Enterobacterales
+uv|DQ133906.1:2593-3425-49	181	288	91347	Enterobacterales
 uv|DQ133906.1:2593-3425-49	390	791	91347	Enterobacterales
 uv|DQ230323.1:876-1061	84	122	91347	Enterobacterales
 uv|DQ487213.1:6078-6107-49	1	30	9443	Primates
@@ -47,11 +49,18 @@ uv|EU292740.1:1395-1507	16	49	91347	Enterobacterales
 uv|EU496099.1:1110-1197	1	41	91347	Enterobacterales
 uv|EU496102.1:1697-1794	50	90	91347	Enterobacterales
 uv|EU496103.1:1365-1456	41	92	91347	Enterobacterales
+uv|EU546815.1:1298-1347	1	50	28883	Caudovirales
+uv|EU546815.1:1806-1855	1	50	28883	Caudovirales
+uv|EU546815.1:1997-2088	1	92	28883	Caudovirales
+uv|EU546815.1:4907-4998	1	92	28883	Caudovirales
+uv|EU546815.1:7225-7274	1	50	28883	Caudovirales
 uv|FJ160466.1:1-203	78	112	91347	Enterobacterales
+uv|FJ160466.1:1061-1313	125	253	91347	Enterobacterales
 uv|FJ160466.1:1899-7260-49	4828	4872	91347	Enterobacterales
 uv|FJ160466.1:291-809	342	375	91347	Enterobacterales
 uv|FJ380061.1:1086-1295	106	146	91347	Enterobacterales
 uv|FJ710109.1:6726-9221	2398	2435	91347	Enterobacterales
+uv|FJ931533.1:7978-12753-49	2749	3193	7147	Diptera
 uv|GU933126.1:771-869	6	46	91347	Enterobacterales
 uv|HM162842.2:1904-2262	233	268	91347	Enterobacterales
 uv|HQ245711.1:4683-4885	1	154	91347	Enterobacterales
@@ -95,7 +104,10 @@ uv|KM407513.1:4754-4852	69	99	9443	Primates
 uv|KM407513.1:4934-5032	1	99	9443	Primates
 uv|KM407513.1:5612-5710	71	99	9443	Primates
 uv|KM407513.1:5766-5878	1	52	9443	Primates
-uv|KU936036.1	155	238	91347	Enterobacterales
+uv|KU936036.1:2396-3564	155	238	91347	Enterobacterales
+uv|KY031734.1:5282-5701	55	420	91347	Enterobacterales
+uv|KY031734.1:6836-6942	1	107	91347	Enterobacterales
+uv|KY031734.1:7505-8698	1	50	91347	Enterobacterales
 uv|L05083.1:1-447	1	67	91347	Enterobacterales
 uv|L05083.1:1-447	69	338	91347	Enterobacterales
 uv|L05083.1:5894-5941-49	49	97	91347	Enterobacterales
@@ -146,6 +158,7 @@ uv|NGB00591.1:1186-1451	161	209	91347	Enterobacterales
 uv|NGB00591.1:1186-1451	48	94	91347	Enterobacterales
 uv|NGB00620.1:4381-4623	161	194	91347	Enterobacterales
 uv|NGB00620.1:4381-4623	49	111	91347	Enterobacterales
+uv|NGB00985.1:4577-4691	47	68	6143	Semaeostomeae
 uv|NGB01023.1:946-1024	1	79	561	Enterobacterales
 uv|U02436.1:3152-4436	919	981	91347	Enterobacterales
 uv|U02453.1:1-91	52	91	91347	Enterobacterales
@@ -223,6 +236,7 @@ uv|U75323.1:1187-1308	1	50	91347	Enterobacterales
 uv|U75324.1:6579-6888	48	96	91347	Enterobacterales
 uv|U75992.1:11880-11976	1	97	91347	Enterobacterales
 uv|U80929.2:4767-4937	65	104	91347	Enterobacterales
+uv|U89937.1:10-1647	38	1586	9443	Primates
 uv|U89960.1:1471-2257	1	41	4892	Saccharomycetales
 uv|U89960.1:1471-2257	739	787	4892	Saccharomycetales
 uv|U89960.1:2491-2588	1	49	4892	Saccharomycetales
