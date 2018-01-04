@@ -1,6 +1,13 @@
+uv|AB009864.2:304-865	60	329	9443	Primates
 uv|AB095955.1:4693-4820	81	128	91347	Enterobacterales
 uv|AB095955.1:534-626	1	48	91347	Enterobacterales
 uv|AB095955.1:6160-6250	1	49	91347	Enterobacterales
+uv|AF061923.1:29-1852	1363	1452	91347	Enterobacterales
+uv|AF061923.1:29-1852	1453	1652	91347	Enterobacterales
+uv|AF061923.1:29-1852	1689	1765	91347	Enterobacterales
+uv|AF061923.1:29-1852	319	474	91347	Enterobacterales
+uv|AF061923.1:29-1852	475	1362	91347	Enterobacterales
+uv|AF061923.1:29-1852	61	137	91347	Enterobacterales
 uv|AF061930.1:1707-1804	1	38	91347	Enterobacterales
 uv|AF062080.1:1240-1337	1	38	91347	Enterobacterales
 uv|AF102576.1:1-3461	24	3209	9443	Primates
@@ -251,6 +258,8 @@ uv|X53938.1:1293-1389	1	49	91347	Enterobacterales
 uv|X65317.2:3921-3993-32	1	42	91347	Enterobacterales	
 uv|X65317.2:3921-3993-32	56	78	194966	Sp6virus
 uv|X65317.2:3921-3993-32	56	78	91347	Enterobacterales
+uv|Z46234.1:1-402	20	353	4892	Saccharomycetales
+uv|Z46234.1:664-3443	1	2617	4892	Saccharomycetales
 uv|Z46234.1:664-3443	2744	2780	91347	Enterobacterales
 uv|Z50120.1:1-230	11	50	91347	Enterobacterales
 uv|Z50120.1:1215-5191	2126	2360	91347	Enterobacterales
