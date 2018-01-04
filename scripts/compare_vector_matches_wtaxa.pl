@@ -211,8 +211,8 @@ my $usage    = "Usage: perl compare_vector_matches_wtaxa.pl";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.09";
-my $releasedate   = "Nov 2017";
+my $version       = "0.10";
+my $releasedate   = "Jan 2018";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
@@ -373,7 +373,7 @@ while(defined($nextline = <SUMMARY>)) {
     }
     if ("NO_DATA" eq $output_result) {
       if ((defined($amr_first_match_index{$this_vector})) && 
-          (($UNCULTURED_BACTERIA_TAXON == $one_taxid) || ($BACTERIA_TAXON == find_ancestor($one_genus,"superkingdom")))) {
+          (($UNCULTURED_BACTERIA_TAXON == $one_taxid) || ($BACTERIA_TAXON == find_ancestor($one_genus,"superkingdom")) || ($BACTERIA_TAXON == find_ancestor($one_taxid,"superkingdom")))) {
         $start_index = $amr_first_match_index{$this_vector};
         $end_index   = $amr_last_match_index{$this_vector};
         for($m = $start_index; $m <= $end_index; $m++) {
