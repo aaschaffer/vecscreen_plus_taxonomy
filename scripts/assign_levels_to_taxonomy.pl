@@ -66,7 +66,7 @@ my $usage    = "Usage: perl assign_levels_to_taxonomy.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.10";
+my $version       = "0.11";
 my $releasedate   = "Jan 2018";
 
 # set options in %opt_HH
