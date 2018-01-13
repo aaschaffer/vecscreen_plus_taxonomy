@@ -91,7 +91,7 @@ my $usage    = "Usage: combine_summaries.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.10";
+my $version       = "0.11";
 my $releasedate   = "Jan 2018";
 
 # set options in %opt_HH
@@ -137,9 +137,18 @@ open(OUTPUT,       ">", "$output_file")         or die "Cannot open $output_file
 $num_terminal_lines = parseInputFile($terminal_FH, \@terminal_lines_A, \@terminal_accessions_A, \@terminal_strengths_A, 
                                      \@terminal_overall_strengths_A, undef, \%crossfile_overall_strengths_H, $verbose_mode, 
                                      $ACC_COLUMN, $STR_COLUMN, $OVERALL_STR_COLUMN);
+
+if($debug_mode) { 
+    print "#DEBUG: number of terminal matches $num_terminal_lines\n";
+}
+
 $num_internal_lines = parseInputFile($internal_FH, \@internal_lines_A, \@internal_accessions_A, \@internal_strengths_A, 
                                      \@internal_overall_strengths_A, \%internal_accession_H, \%crossfile_overall_strengths_H, $verbose_mode, 
                                      $ACC_COLUMN, $STR_COLUMN, $OVERALL_STR_COLUMN);
+
+if($debug_mode) { 
+    print "#DEBUG: number of internal_matches $num_internal_lines\n";
+}
 
 ##########################################################################
 # Create and print output 
@@ -258,6 +267,21 @@ foreach $current_strength ("Strong", "Moderate", "Weak") {
       }
       $internal_idx++;
     }
+  }
+  while (($terminal_idx < $num_terminal_lines) && ($internal_idx == $num_internal_lines)) {
+      if($debug_mode) { 
+	  print "#DEBUG: Terminal $terminal_idx\n";
+	  print "#DEBUG: $terminal_accessions_A[$internal_idx]\n";
+	  print "#DEBUG: Terminal strength is $crossfile_overall_strengths_H{$terminal_accessions_A[$internal_idx]}\n";
+      }
+      $terminal_accession = $terminal_accessions_A[$terminal_idx];
+      if ((! ($terminal_printed_A[$terminal_idx])) && ($crossfile_overall_strengths_H{$terminal_accession} eq $current_strength)) { 
+        print OUTPUT "$terminal_lines_A[$terminal_idx]";
+        print OUTPUT "\n";
+        $terminal_printed_A[$terminal_idx] = 1;
+        $num_printed++; 
+      }
+      $terminal_idx++;
   }
 }
 close (OUTPUT);
