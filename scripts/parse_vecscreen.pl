@@ -132,8 +132,8 @@ my $usage    = "Usage: perl parse_vecscreen.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.12";
-my $releasedate   = "Jan 2018";
+my $version       = "0.13";
+my $releasedate   = "June 2018";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
