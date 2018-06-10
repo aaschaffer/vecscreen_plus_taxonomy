@@ -3,8 +3,8 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.12
-January 2018
+Version: 0.13
+June 2018
 ------------------
 README
 
@@ -32,6 +32,7 @@ METHODS
 TEST SCRIPT
 RELEVANT FILES
 CREATING THE TAXONOMY FILE
+AN ADDITIONAL TAXONOMY HELPER PROGRAM
 COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH
 
 **************
@@ -223,8 +224,8 @@ The taxonomy file ($VECPLUSDIR/info-files/taxonomy_tree_wlevels.txt)
 is a file in a special format that includes taxonomy information based
 on NCBI's taxonomy. This can either be created by the user from the
 NCBI taxonomy file, or the user can use the provided file
-taxonomy_tree_wlevels.txt which was created in March 2017. If you are
-using this in 2017, the provided file above should be fine. After
+taxonomy_tree_wlevels.txt, which was created in April 2018. If you are
+using this in 2018, the provided file above should be fine. After
 that, you should create a new up-to-date file. Instructions for doing
 that are provided below in the section CREATING THE TAXONOMY FILE.
 
@@ -647,6 +648,33 @@ Running assign_levels_to_taxonomy.pl will add
 -- a fifth column that is 1 if the node is a descendant of
    Bacteria and 0 if not.
 
+******************************
+**AN ADDITIONAL TAXONOMY HELPER PROGRAM**
+******************************
+The repositor for VecSCreen_plus_taxonomy also includes the helper program
+find_taxonomy_ancestors.pl
+
+The purpose of this program is to solve the following taxonomy-related problem.
+Given as input one or more accessions, what are the taxid ancestors of those
+accessions at some specified taxonomy level, such as order or class.
+
+Usage:
+
+        find_taxonomy_ancestors.pl \
+        --input_summary <input file of identifiers> \
+        --input_taxa <input file with NCBI's taxonomy> \
+        --input_level <desired taxonomy level> \
+        --outfile <output file>
+
+The input has three columns: 1) accession 2) taxid of accession typically, at species level 3) taxonomy name of the taxid in column 2
+The output repeats the input columns and adds a fourth column with the taxid  of the ancestor at the specified level.
+If there is no ancestor at the specified level, the value 1 is printed instead because 1 is the root of the taxonomy tree.
+
+find_taxonomy_ancestors.pl is not currently used within VecScreen_plus_taxonomy, but is used in
+a related project.
+
+					
+
 *********************************************************
 **COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH**
 *********************************************************
@@ -702,5 +730,5 @@ and delete the rest of the files, if desired.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
-(schaffer@ncbi.nlm.nih.gov)
+(aschaffe@helix.nih.gov)
 
