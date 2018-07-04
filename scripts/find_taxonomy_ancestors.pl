@@ -106,8 +106,8 @@ $usage      .= "--outfile output.txt\n";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.13";
-my $releasedate   = "June 2018";
+my $version       = "0.14";
+my $releasedate   = "July 2018";
 
 # This section needs to be kept in sync (manually) with the opt_Add() section above
 my %GetOptions_H = ();
@@ -278,9 +278,9 @@ sub find_ancestor {
     my ($local_taxon, $local_target_rank) = @_;
     my $local_ancestor; #one line of taxonomy information
 
-    if (!defined($taxonomy_parent{$local_taxon})) {
+    if ((!defined($local_taxon)) || (!defined($taxonomy_parent{$local_taxon}))) {
         print STDERR "Taxid $local_taxon is not in the taxonomy tree, the tree likely needs to be updated\n";
-	exit;
+        return(1)
     }
     $local_ancestor = $local_taxon;
     while ((1 != $local_ancestor) && ((!(defined($rank_hash{$local_ancestor}))) || (!($rank_hash{$local_ancestor} eq $local_target_rank)))) {
