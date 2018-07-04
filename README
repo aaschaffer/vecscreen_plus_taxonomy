@@ -3,8 +3,8 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.13
-June 2018
+Version: 0.14
+July 2018
 ------------------
 README
 
@@ -668,7 +668,8 @@ Usage:
 
 The input has three columns: 1) accession 2) taxid of accession typically, at species level 3) taxonomy name of the taxid in column 2
 The output repeats the input columns and adds a fourth column with the taxid  of the ancestor at the specified level.
-If there is no ancestor at the specified level, the value 1 is printed instead because 1 is the root of the taxonomy tree.
+If there is no ancestor at the specified level, or if the taxid is not recognized,
+then the value 1 is printed instead because 1 is the root of the taxonomy tree.
 
 find_taxonomy_ancestors.pl is not currently used within VecScreen_plus_taxonomy, but is used in
 a related project.
