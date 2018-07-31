@@ -106,7 +106,7 @@ $usage      .= "--outfile output.txt\n";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.14";
+my $version       = "0.15";
 my $releasedate   = "July 2018";
 
 # This section needs to be kept in sync (manually) with the opt_Add() section above
