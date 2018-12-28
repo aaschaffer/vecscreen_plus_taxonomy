@@ -91,8 +91,8 @@ my $usage    = "Usage: combine_summaries.pl ";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.15";
-my $releasedate   = "July 2018";
+my $version       = "0.16";
+my $releasedate   = "December 2018";
 
 # set options in %opt_HH
 opt_SetFromUserHash(\%GetOptions_H, \%opt_HH);
