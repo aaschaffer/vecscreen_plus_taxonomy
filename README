@@ -115,7 +115,7 @@ export BLASTDB="$VECPLUSDIR/univec-files:$BLASTDB"
 
 The 4 lines to add to your .cshrc file:
 -----------
-setenv SENSORDIR "PATH/TO/VEC/PLUS"
+setenv VECPLUSDIR "PATH/TO/VEC/PLUS"
 setenv PERL5LIB "$VECPLUSDIR":"$PERL5LIB"
 setenv PATH "$VECPLUSDIR/scripts":"$PATH"
 setenv BLASTDB "$VECPLUSDIR/univec-files":"$BLASTDB"
