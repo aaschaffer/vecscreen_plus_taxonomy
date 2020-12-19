@@ -287,8 +287,8 @@ following 11 columns:
 Column 1:  Accession of query
 Column 2:  Genus of query if known, or 1 otherwise
 Column 3:  Species of query if known, or 1 otherwise
-Column 4:  Lower end of the alignment in the vector
-Column 5:  Upper end of the alignment in the vector
+Column 4:  Lower end of the alignment in the query
+Column 5:  Upper end of the alignment in the query
 Column 6:  Matching vector, starting with uv|
 Column 7:  One end of the alignment in the vector
 Column 8:  The other end of the alignment in the vector
