@@ -106,8 +106,8 @@ $usage      .= "--outfile output.txt\n";
 
 my $executable    = $0;
 my $date          = scalar localtime();
-my $version       = "0.16";
-my $releasedate   = "December 2018";
+my $version       = "0.17";
+my $releasedate   = "December 2020";
 
 # This section needs to be kept in sync (manually) with the opt_Add() section above
 my %GetOptions_H = ();

@@ -1,0 +1,10 @@
+# vecscreen_plus_taxonomy release notes 
+
+-------------
+0.17 release, minor update
+December 21, 2020
+
+- updates NCBI taxonomy tree (info-files/taxonomy_tree_wlevels.txt)
+- fixes some typos in README
+- adds this RELEASE-NOTES.txt file
+-------------
