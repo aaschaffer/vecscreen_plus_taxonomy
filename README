@@ -3,8 +3,8 @@ Author: Alejandro Schaffer
 Documentation help and code review: Eric Nawrocki 
 
 github: https://github.com/aaschaffer/vecscreen_plus_taxonomy.git
-Version: 0.16
-December 2018
+Version: 0.17
+December 2020
 ------------------
 README
 
@@ -145,7 +145,7 @@ for .cshrc.
 at line 4 out of 4. 
 
 To check that your environment variables are properly set up do the
-following three commands:
+following four commands:
 echo $VECPLUSDIR
 echo $PERL5LIB
 echo $PATH
@@ -167,7 +167,7 @@ that begins with:
 PATH/TO/VEC/PLUS/univec-files
 
 If that is not the case, please email Alejandro Schaffer
-(schaffer@ncbi.nlm.nih.gov). If you do see the expected output, the
+(alejandro.schaffer@nih.gov). If you do see the expected output, the
 following sample run should work.
 
 Finally, you will need to gunzip two exectuable files in
@@ -180,7 +180,7 @@ are not already executable). Perform the following commands:
 > chmod +x vecscreen
 > chmod +x srcchk
 
-After thisk, you should be able to successfully complete the sample
+After this, you should be able to successfully complete the sample
 runs below, as well as the test script in the TEST SCRIPT section
 below. 
 
@@ -372,7 +372,7 @@ to one of the higher-level files*:
    family_level_exclusions.txt
    tribe_level_exclusions.txt
 
-* Please email schaffer@ncbi.nlm.nih.gov if you find any examples of
+* Please email alejandro.schaffer@nih.gov if you find any examples of
 vector sources that should be propagated to a higher level of taxonomy.
 
 ***********
@@ -424,7 +424,7 @@ Testing compare_vector_matches_wtaxa.pl  ... done.
 If you do not see this output, make sure that you've set up your
 environment variable $VECPLUSDIR correctly as explained above in the
 'SETTING UP ENVIRONMENT VARIABLES' section. If you still have
-problems, email schaffer@ncbi.nlm.nih.gov.
+problems, email alejandro.schaffer@nih.gov.
 
 ******************
 **RELEVANT FILES**
@@ -651,7 +651,7 @@ Running assign_levels_to_taxonomy.pl will add
 ******************************
 **AN ADDITIONAL TAXONOMY HELPER PROGRAM**
 ******************************
-The repositor for VecSCreen_plus_taxonomy also includes the helper program
+The repository for vecscreen_plus_taxonomy also includes the helper program
 find_taxonomy_ancestors.pl
 
 The purpose of this program is to solve the following taxonomy-related problem.
@@ -666,15 +666,15 @@ Usage:
         --input_level <desired taxonomy level> \
         --outfile <output file>
 
-The input has three columns: 1) accession 2) taxid of accession typically, at species level 3) taxonomy name of the taxid in column 2
-The output repeats the input columns and adds a fourth column with the taxid  of the ancestor at the specified level.
-If there is no ancestor at the specified level, or if the taxid is not recognized,
-then the value 1 is printed instead because 1 is the root of the taxonomy tree.
+The input has three columns: 1) accession 2) taxid of accession
+typically, at species level 3) taxonomy name of the taxid in column 2
+The output repeats the input columns and adds a fourth column with the
+taxid of the ancestor at the specified level.  If there is no ancestor
+at the specified level, or if the taxid is not recognized, then the
+value 1 is printed instead because 1 is the root of the taxonomy tree.
 
-find_taxonomy_ancestors.pl is not currently used within VecScreen_plus_taxonomy, but is used in
-a related project.
-
-					
+find_taxonomy_ancestors.pl is not currently used within
+VecScreen_plus_taxonomy, but is used in a related project.
 
 *********************************************************
 **COMPILING vecscreen AND srcchk ON LINUX, FROM SCRATCH**
@@ -731,5 +731,5 @@ and delete the rest of the files, if desired.
 
 *******************************************
 Send any comments or questions to Alejandro Schaffer
-(aschaffe@helix.nih.gov)
+(alejandro.schaffer@nih.gov)
 
