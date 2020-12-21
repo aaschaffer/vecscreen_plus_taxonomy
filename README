@@ -145,7 +145,7 @@ for .cshrc.
 at line 4 out of 4. 
 
 To check that your environment variables are properly set up do the
-following three commands:
+following four commands:
 echo $VECPLUSDIR
 echo $PERL5LIB
 echo $PATH
@@ -167,7 +167,7 @@ that begins with:
 PATH/TO/VEC/PLUS/univec-files
 
 If that is not the case, please email Alejandro Schaffer
-(schaffer@ncbi.nlm.nih.gov). If you do see the expected output, the
+(alejandro.schaffer@nih.gov). If you do see the expected output, the
 following sample run should work.
 
 Finally, you will need to gunzip two exectuable files in
